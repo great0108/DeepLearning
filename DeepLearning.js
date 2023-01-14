@@ -24,6 +24,10 @@
         this.creator = func
     }
 
+    Variable.prototype.cleargrad = function() {
+        this.grad = null
+    }
+
     Variable.prototype.backward = function() {
         if(this.grad === null) {
             this.grad = Arr.fill(this.data.shape(), 1)
@@ -41,7 +45,11 @@
             for(let i = 0; i < gxs.length; i++) {
                 let x = f.inputs[i]
                 let gx = gxs[i]
-                x.grad = gx
+                if(x.grad === null) {
+                    x.grad = gx
+                } else {
+                    x.grad = x.grad.plus(gx)
+                }
 
                 if(x.creator !== null) {
                     funcs.push(x.creator)
@@ -167,14 +175,15 @@
         return y1.data.minus(y0.data).div(2 * eps)
     }
 
-    let x = new Variable(Arr(2))
-    let y = new Variable(Arr(3))
-
-    let z = add(square(x), square(y))
-    z.backward()
-    console.log(z.data)
+    let x = new Variable(Arr(3))
+    let y = add(x, x)
+    y.backward()
     console.log(x.grad)
-    console.log(y.grad)
+
+    x.cleargrad()
+    y = add(add(x, x), x)
+    y.backward()
+    console.log(x.grad)
 
 
 })()
