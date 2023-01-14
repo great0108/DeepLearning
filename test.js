@@ -1,10 +1,11 @@
-function as_array(x) {
-    if(typeof x === "number") {
-        return Array(x)
-    }
-    return x
+const Arr = require("./Arr")
+function List(arr) {
+    arr.__proto__ = List.prototype
+    return arr
 }
+List.prototype.__proto__ = Array.prototype
 
-console.log(as_array(1))
-console.log(as_array([1]))
-console.log(as_array(null))
+let a = Arr()
+console.log(a instanceof List)
+a = List(a)
+console.log(a instanceof List)

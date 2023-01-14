@@ -2,6 +2,12 @@
     "use strict"
     const Arr = require("./Arr")
 
+    function List(arr) {
+        arr.__proto__ = List.prototype
+        return arr
+    }
+    List.prototype.__proto__ = Array.prototype
+
     function Variable(data) {
         if(data !== null) {
             if(!(data instanceof Arr)) {
@@ -26,11 +32,20 @@
         let funcs = [this.creator]
         while(funcs.length > 0) {
             let f = funcs.pop()
-            let x = f.input, y = f.output
-            x.grad = f.backward(y.grad)
+            let gys = f.outputs.map(output => output.grad)
+            let gxs = f.backward.apply(f, gys)
+            if(gxs instanceof List) {
+                gxs = List(gxs)
+            }
 
-            if(x.creator !== null) {
-                funcs.push(x.creator)
+            for(let i = 0; i < gxs.length; i++) {
+                let x = f.inputs[i]
+                let gx = gxs[i]
+                x.grad = gx
+
+                if(x.creator !== null) {
+                    funcs.push(x.creator)
+                }
             }
         }
     }
@@ -54,14 +69,14 @@
         let inputs = Array.from(arguments)
         let xs = inputs.map(x => x.data)
         let ys = this.forward.apply(this, xs)
-        if(!Array.isArray(ys)) {
-            ys = [ys]
+        if(ys instanceof List) {
+            ys = List(ys)
         }
         let outputs = ys.map(y => new Variable(as_array(y)))
 
         outputs.forEach(output => output.set_creator(this))
         this.inputs = inputs
-        this.outputs = this.outputs
+        this.outputs = outputs
         return outputs.length > 1 ? outputs : outputs[0]
     }
 
@@ -88,7 +103,7 @@
     }
 
     Square.prototype.backward = function(gy) {
-        let x = this.input.data
+        let x = this.inputs[0].data
         let gx = x.mul(2).mul(gy)
         return gx
     }
@@ -108,7 +123,7 @@
     }
 
     Exp.prototype.backward = function(gy) {
-        let x = this.input.data
+        let x = this.inputs[0].data
         let gx = x.deepMap(v => Math.exp(v)).mul(gy)
         return gx
     }
@@ -125,6 +140,10 @@
     Add.prototype.forward = function(x0, x1) {
         let y = x0.plus(x1)
         return y
+    }
+
+    Add.prototype.backward = function(gy) {
+        return List([gy, gy])
     }
 
 
@@ -148,9 +167,14 @@
         return y1.data.minus(y0.data).div(2 * eps)
     }
 
-    let x0 = new Variable(Arr(2))
-    let x1 = new Variable(Arr(3))
-    let y = add(x0, x1)
-    console.log(y.data)
+    let x = new Variable(Arr(2))
+    let y = new Variable(Arr(3))
+
+    let z = add(square(x), square(y))
+    z.backward()
+    console.log(z.data)
+    console.log(x.grad)
+    console.log(y.grad)
+
 
 })()
