@@ -5,7 +5,22 @@
     function Variable(data) {
         this.data = data
         this.grad = null
+        this.creator = null
     }
+
+    Variable.prototype.set_creator = function(func) {
+        this.creator = func
+    }
+
+    Variable.prototype.backward = function() {
+        let f = this.creator
+        if(f !== null) {
+            let x = f.input
+            x.grad = f.backward(this.grad)
+            x.backward()
+        }
+    }
+
 
     function Function() {
         let result = function() {
@@ -19,7 +34,9 @@
         let x = input.data
         let y = this.forward(x)
         let output = new Variable(y)
+        output.set_creator(this)
         this.input = input
+        this.output = output
         return output
     }
 
@@ -81,10 +98,7 @@
     let y = C(b)
 
     y.grad = Arr(1)
-    b.grad = C.backward(y.grad)
-    a.grad = B.backward(b.grad)
-    x.grad = A.backward(a.grad)
+    y.backward()
     console.log(x.grad)
-    console.log(A)
 
 })()
