@@ -13,11 +13,15 @@
     }
 
     Variable.prototype.backward = function() {
-        let f = this.creator
-        if(f !== null) {
-            let x = f.input
-            x.grad = f.backward(this.grad)
-            x.backward()
+        let funcs = [this.creator]
+        while(funcs.length > 0) {
+            let f = funcs.pop()
+            let x = f.input, y = f.output
+            x.grad = f.backward(y.grad)
+
+            if(x.creator !== null) {
+                funcs.push(x.creator)
+            }
         }
     }
 
