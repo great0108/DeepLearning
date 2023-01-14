@@ -1,3 +1,4 @@
+import weakref
 import numpy as np
 
 
@@ -27,7 +28,6 @@ class Variable:
         seen_set = set()
 
         def add_func(f):
-            print(f)
             if f not in seen_set:
                 funcs.append(f)
                 seen_set.add(f)
@@ -37,7 +37,7 @@ class Variable:
 
         while funcs:
             f = funcs.pop()
-            gys = [output.grad for output in f.outputs]
+            gys = [output().grad for output in f.outputs]  # output is weakref
             gxs = f.backward(*gys)
             if not isinstance(gxs, tuple):
                 gxs = (gxs,)
@@ -70,7 +70,7 @@ class Function:
         for output in outputs:
             output.set_creator(self)
         self.inputs = inputs
-        self.outputs = outputs
+        self.outputs = [weakref.ref(output) for output in outputs]
         return outputs if len(outputs) > 1 else outputs[0]
 
     def forward(self, xs):
@@ -95,24 +95,6 @@ def square(x):
     return Square()(x)
 
 
-class Add(Function):
-    def forward(self, x0, x1):
-        y = x0 + x1
-        return y
-
-    def backward(self, gy):
-        return gy, gy
-
-
-def add(x0, x1):
-    return Add()(x0, x1)
-
-
-x = Variable(np.array(2.0))
-a = square(x)
-y = add(square(a), square(a))
-y.backward()
-
-a = [1,2,4,3]
-a.sort(key=lambda x: x)
-print(a)
+for i in range(10):
+    x = Variable(np.random.randn(10000))  # big data
+    y = square(square(square(x)))

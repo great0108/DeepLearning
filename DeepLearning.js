@@ -189,13 +189,10 @@
         return y1.data.minus(y0.data).div(2 * eps)
     }
 
-    let x = new Variable(Arr(2))
-    let a = square(x)
-    let y = add(square(a), square(a))
-    y.backward()
-
-    console.log(y.data)
-    console.log(x.grad)
+    for(let i = 0; i < 10; i++) {
+        let x = new Variable(Arr.zeros(10000).map(v => Math.random()))
+        let y = square(square(square(x)))
+    }
 
 
 })()
