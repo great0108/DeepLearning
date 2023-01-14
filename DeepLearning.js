@@ -50,15 +50,19 @@
         return result;
     }
 
-    Function.prototype.__call__ = function(inputs) {
+    Function.prototype.__call__ = function() {
+        let inputs = Array.from(arguments)
         let xs = inputs.map(x => x.data)
-        let ys = this.forward(xs)
+        let ys = this.forward.apply(this, xs)
+        if(!Array.isArray(ys)) {
+            ys = [ys]
+        }
         let outputs = ys.map(y => new Variable(as_array(y)))
 
         outputs.forEach(output => output.set_creator(this))
         this.inputs = inputs
         this.outputs = this.outputs
-        return outputs
+        return outputs.length > 1 ? outputs : outputs[0]
     }
 
     Function.prototype.forward = function() {
@@ -118,10 +122,9 @@
 
     Add.prototype.__proto__ = Function.prototype
 
-    Add.prototype.forward = function(xs) {
-        let [x0, x1] = xs
+    Add.prototype.forward = function(x0, x1) {
         let y = x0.plus(x1)
-        return [y]
+        return y
     }
 
 
@@ -133,6 +136,10 @@
         return new Exp()(x)
     }
 
+    function add(x0, x1) {
+        return new Add()(x0, x1)
+    }
+
     function numerical_diff(f, x, eps=1e-4) {
         let x0 = new Variable(x.data.minus(eps))
         let x1 = new Variable(x.data.plus(eps))
@@ -141,10 +148,9 @@
         return y1.data.minus(y0.data).div(2 * eps)
     }
 
-    let xs = [new Variable(Arr(2)), new Variable(Arr(3))]
-    let f = Add()
-    let ys = f(xs)
-    let y = ys[0]
+    let x0 = new Variable(Arr(2))
+    let x1 = new Variable(Arr(3))
+    let y = add(x0, x1)
     console.log(y.data)
 
 })()
