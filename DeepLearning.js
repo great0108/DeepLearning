@@ -116,13 +116,18 @@
         return new Exp()(x)
     }
 
-    let x = new Variable(Arr(0.5))
-    let y = square(exp(square(x)))
-    y.backward()
-    console.log(x.grad)
+    function numerical_diff(f, x, eps=1e-4) {
+        let x0 = new Variable(x.data.minus(eps))
+        let x1 = new Variable(x.data.plus(eps))
+        let y0 = f(x0)
+        let y1 = f(x1)
+        return y1.data.minus(y0.data).div(2 * eps)
+    }
 
-    x = new Variable(Arr(1))
-    x = new Variable(null)
-    x = new Variable(1)
+    let x = new Variable(Arr(Math.random()))
+    let y = square(x)
+    y.backward()
+    let num_grad = numerical_diff(square, x)
+    console.log(x.grad, num_grad)
 
 })()
