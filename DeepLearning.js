@@ -2,7 +2,8 @@
     "use strict"
     const Arr = require("./Arr")
 
-    function List(arr) {
+    function List() {
+        let arr = Array.from(arguments)
         arr.__proto__ = List.prototype
         return arr
     }
@@ -18,10 +19,12 @@
         this.data = data
         this.grad = null
         this.creator = null
+        this.generation = 0
     }
 
     Variable.prototype.set_creator = function(func) {
         this.creator = func
+        this.generation = func.generation + 1
     }
 
     Variable.prototype.cleargrad = function() {
@@ -33,12 +36,22 @@
             this.grad = Arr.fill(this.data.shape(), 1)
         }
 
-        let funcs = [this.creator]
+        let funcs = []
+        let seen_set = new Set()
+        function add_func(f) {
+            if(!(seen_set.has(f))) {
+                funcs.push(f)
+                seen_set.add(f)
+                funcs.sort((a, b) => a.generation - b.generation)
+            }
+        }
+        add_func(this.creator)
+
         while(funcs.length > 0) {
             let f = funcs.pop()
-            let gys = f.outputs.map(output => output.grad)
+            let gys = f.outputs.map(output => as_array(output.grad))
             let gxs = f.backward.apply(f, gys)
-            if(gxs instanceof List) {
+            if(!(gxs instanceof List)) {
                 gxs = List(gxs)
             }
 
@@ -52,7 +65,7 @@
                 }
 
                 if(x.creator !== null) {
-                    funcs.push(x.creator)
+                    add_func(x.creator)
                 }
             }
         }
@@ -77,11 +90,12 @@
         let inputs = Array.from(arguments)
         let xs = inputs.map(x => x.data)
         let ys = this.forward.apply(this, xs)
-        if(ys instanceof List) {
+        if(!(ys instanceof List)) {
             ys = List(ys)
         }
         let outputs = ys.map(y => new Variable(as_array(y)))
 
+        this.generation = Math.max.apply(null, inputs.map(x => x.generation))
         outputs.forEach(output => output.set_creator(this))
         this.inputs = inputs
         this.outputs = outputs
@@ -151,7 +165,7 @@
     }
 
     Add.prototype.backward = function(gy) {
-        return List([gy, gy])
+        return List(gy, gy)
     }
 
 
@@ -175,14 +189,12 @@
         return y1.data.minus(y0.data).div(2 * eps)
     }
 
-    let x = new Variable(Arr(3))
-    let y = add(x, x)
+    let x = new Variable(Arr(2))
+    let a = square(x)
+    let y = add(square(a), square(a))
     y.backward()
-    console.log(x.grad)
 
-    x.cleargrad()
-    y = add(add(x, x), x)
-    y.backward()
+    console.log(y.data)
     console.log(x.grad)
 
 
