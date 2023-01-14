@@ -1,6 +1,10 @@
-function a() {
-    return 1
+function as_array(x) {
+    if(typeof x === "number") {
+        return Array(x)
+    }
+    return x
 }
-a.a = 1
-console.log(a())
-console.log(a.a)
+
+console.log(as_array(1))
+console.log(as_array([1]))
+console.log(as_array(null))

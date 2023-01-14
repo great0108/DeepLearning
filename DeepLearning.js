@@ -36,7 +36,7 @@
     }
 
     function as_array(x) {
-        if(!isNaN(x)) {
+        if(typeof x === "number") {
             return Arr(x)
         }
         return x
@@ -50,14 +50,15 @@
         return result;
     }
 
-    Function.prototype.__call__ = function(input) {
-        let x = input.data
-        let y = this.forward(as_array(x))
-        let output = new Variable(y)
-        output.set_creator(this)
-        this.input = input
-        this.output = output
-        return output
+    Function.prototype.__call__ = function(inputs) {
+        let xs = inputs.map(x => x.data)
+        let ys = this.forward(xs)
+        let outputs = ys.map(y => new Variable(as_array(y)))
+
+        outputs.forEach(output => output.set_creator(this))
+        this.inputs = inputs
+        this.outputs = this.outputs
+        return outputs
     }
 
     Function.prototype.forward = function() {
@@ -108,6 +109,22 @@
         return gx
     }
 
+    
+    function Add() {
+        let result = Function.call(this)
+        result.__proto__ = Add.prototype
+        return result
+    }
+
+    Add.prototype.__proto__ = Function.prototype
+
+    Add.prototype.forward = function(xs) {
+        let [x0, x1] = xs
+        let y = x0.plus(x1)
+        return [y]
+    }
+
+
     function square(x) {
         return new Square()(x)
     }
@@ -124,10 +141,10 @@
         return y1.data.minus(y0.data).div(2 * eps)
     }
 
-    let x = new Variable(Arr(Math.random()))
-    let y = square(x)
-    y.backward()
-    let num_grad = numerical_diff(square, x)
-    console.log(x.grad, num_grad)
+    let xs = [new Variable(Arr(2)), new Variable(Arr(3))]
+    let f = Add()
+    let ys = f(xs)
+    let y = ys[0]
+    console.log(y.data)
 
 })()
