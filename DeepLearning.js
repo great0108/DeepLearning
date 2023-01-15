@@ -217,6 +217,26 @@
     }
 
 
+    function Mul() {
+        let result = Function.call(this)
+        result.__proto__ = Mul.prototype
+        return result
+    }
+
+    Mul.prototype.__proto__ = Function.prototype
+
+    Mul.prototype.forward = function(x0, x1) {
+        let y = x0.mul(x1)
+        return y
+    }
+
+    Mul.prototype.backward = function(gy) {
+        let x0 = this.inputs[0].data
+        let x1 = this.inputs[1].data
+        return List(x1.mul(gy), x0.mul(gy))
+    }
+
+
     function square(x) {
         return new Square()(x)
     }
@@ -229,6 +249,11 @@
         return new Add()(x0, x1)
     }
 
+    function mul(x0, x1) {
+        return new Mul()(x0, x1)
+    }
+
+
     function numerical_diff(f, x, eps=1e-4) {
         let x0 = new Variable(x.data.minus(eps))
         let x1 = new Variable(x.data.plus(eps))
@@ -237,11 +262,19 @@
         return y1.data.minus(y0.data).div(2 * eps)
     }
 
-    let x = new Variable(Arr([[1,2,3], [4,5,6]]))
-    x.name = "x"
 
-    console.log(x.name)
-    console.log(x.shape)
-    console.log(x.view)
+    Variable.prototype.add = function(x) {return add(this, x)}
+    Variable.prototype.mul = function(x) {return mul(this, x)}
+
+    let a = new Variable(Arr(3))
+    let b = new Variable(Arr(2))
+    let c = new Variable(Arr(1))
+
+    let y = a.mul(b).add(c)
+    y.backward()
+
+    console.log(y.view)
+    console.log(a.grad)
+    console.log(b.grad)
 
 })()
