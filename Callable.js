@@ -1,8 +1,8 @@
 function Callable() {
-	let result = function Callable() {
+	let result = function() {
 		return result.__call__.apply(result, arguments);
     }
-	result.__proto__ = Callable.prototype;
+	Object.setPrototypeOf(result, Callable.prototype)
 	return result;
 }
 Callable.prototype.__call__ = function(x) {
@@ -14,7 +14,7 @@ Callable.prototype.a = function() {
 
 function Callable2() {
     let result = Callable.call(this)
-	result.__proto__ = Callable2.prototype;
+	Object.setPrototypeOf(result, Callable2.prototype)
 	return result;
 }
 Callable2.prototype.__proto__ = Callable.prototype

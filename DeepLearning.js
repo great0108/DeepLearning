@@ -4,7 +4,7 @@
 
     function List() {
         let arr = Array.from(arguments)
-        arr.__proto__ = List.prototype
+        Object.setPrototypeOf(arr, List.prototype)
         return arr
     }
     List.prototype.__proto__ = Array.prototype
@@ -128,7 +128,7 @@
         let result = function() {
             return result.__call__.apply(result, arguments);
         }
-        result.__proto__ = Function.prototype;
+        Object.setPrototypeOf(result, Function.prototype)
         return result;
     }
 
@@ -161,7 +161,7 @@
 
     function Square() {
         let result = Function.call(this)
-        result.__proto__ = Square.prototype
+        Object.setPrototypeOf(result, Square.prototype)
         return result
     }
 
@@ -181,7 +181,7 @@
 
     function Exp() {
         let result = Function.call(this)
-        result.__proto__ = Exp.prototype
+        Object.setPrototypeOf(result, Exp.prototype)
         return result
     }
 
@@ -201,7 +201,7 @@
     
     function Add() {
         let result = Function.call(this)
-        result.__proto__ = Add.prototype
+        Object.setPrototypeOf(result, Add.prototype)
         return result
     }
 
@@ -219,7 +219,7 @@
 
     function Mul() {
         let result = Function.call(this)
-        result.__proto__ = Mul.prototype
+        Object.setPrototypeOf(result, Mul.prototype)
         return result
     }
 
@@ -254,7 +254,8 @@
     }
 
 
-    function numerical_diff(f, x, eps=1e-4) {
+    function numerical_diff(f, x, eps) {
+        eps = eps === undefined ? 1e-4 : eps
         let x0 = new Variable(x.data.minus(eps))
         let x1 = new Variable(x.data.plus(eps))
         let y0 = f(x0)
@@ -276,5 +277,5 @@
     console.log(y.view)
     console.log(a.grad)
     console.log(b.grad)
-
+    
 })()
