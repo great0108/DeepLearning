@@ -9,6 +9,25 @@
     }
     List.prototype.__proto__ = Array.prototype
 
+    const Config = {
+        "enable_backprop" : true
+    }
+
+    function using_config(name, value, callback) {
+        let old_value = Config[name]
+        Config[name] = value
+        try {
+            callback()
+        } finally {
+            Config[name] = old_value
+        }
+    }
+
+    function no_grad(callback) {
+        using_config("enable_backprop", false, callback)
+    }
+
+
     function Variable(data) {
         if(data !== null) {
             if(!(data instanceof Arr)) {
@@ -31,13 +50,14 @@
         this.grad = null
     }
 
-    Variable.prototype.backward = function() {
+    Variable.prototype.backward = function(retain_grad) {
         if(this.grad === null) {
             this.grad = Arr.fill(this.data.shape(), 1)
         }
 
         let funcs = []
         let seen_set = new Set()
+
         function add_func(f) {
             if(!(seen_set.has(f))) {
                 funcs.push(f)
@@ -45,6 +65,7 @@
                 funcs.sort((a, b) => a.generation - b.generation)
             }
         }
+
         add_func(this.creator)
 
         while(funcs.length > 0) {
@@ -68,8 +89,13 @@
                     add_func(x.creator)
                 }
             }
+
+            if(!retain_grad) {
+                f.outputs.forEach(y => y.grad = null)
+            }
         }
     }
+
 
     function as_array(x) {
         if(typeof x === "number") {
@@ -77,6 +103,7 @@
         }
         return x
     }
+
 
     function Function() {
         let result = function() {
@@ -95,10 +122,12 @@
         }
         let outputs = ys.map(y => new Variable(as_array(y)))
 
-        this.generation = Math.max.apply(null, inputs.map(x => x.generation))
-        outputs.forEach(output => output.set_creator(this))
-        this.inputs = inputs
-        this.outputs = outputs
+        if(Config.enable_backprop) {
+            this.generation = Math.max.apply(null, inputs.map(x => x.generation))
+            outputs.forEach(output => output.set_creator(this))
+            this.inputs = inputs
+            this.outputs = outputs
+        }
         return outputs.length > 1 ? outputs : outputs[0]
     }
 
@@ -189,10 +218,19 @@
         return y1.data.minus(y0.data).div(2 * eps)
     }
 
-    for(let i = 0; i < 10; i++) {
-        let x = new Variable(Arr.zeros(10000).map(v => Math.random()))
-        let y = square(square(square(x)))
-    }
+    let x0 = new Variable(Arr(1))
+    let x1 = new Variable(Arr(1))
+    let t = add(x0, x1)
+    let y = add(x0, t)
+    y.backward()
+    console.log(y.grad, t.grad)
+    console.log(x0.grad, x1.grad)
 
+
+    no_grad(() => {
+        let x = new Variable(Arr(2))
+        let y = square(x)
+        y.backward()
+    })
 
 })()
