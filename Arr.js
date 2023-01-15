@@ -152,6 +152,13 @@ Object.defineProperty(Arr.prototype, "shape", {
     writable : true
 })
 
+Object.defineProperty(Arr.prototype, "size", {
+    value : function() {
+        return this.shape().reduce((a, v) => a*v, 1)
+    },
+    writable : true
+})
+
 Object.defineProperty(Arr.prototype, "ndim", {
     value : function() {
         return this.shape().length

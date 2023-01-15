@@ -28,7 +28,7 @@
     }
 
 
-    function Variable(data) {
+    function Variable(data, name) {
         if(data !== null) {
             if(!(data instanceof Arr)) {
                 throw new Error(data.constructor.name + " is not supported")
@@ -36,10 +36,29 @@
         }
 
         this.data = data
+        this.name = name === undefined ? null : name
         this.grad = null
         this.creator = null
         this.generation = 0
     }
+
+    Object.defineProperties(Variable.prototype, {
+        shape : {
+            get() {return this.data.shape()}
+        },
+        ndim : {
+            get() {return this.data.ndim()}
+        },
+        size : {
+            get() {return this.data.size()}
+        },
+        length : {
+            get() {return this.data.length}
+        },
+        view : {
+            get() {return this.data.view()}
+        }
+    })
 
     Variable.prototype.set_creator = function(func) {
         this.creator = func
@@ -218,19 +237,11 @@
         return y1.data.minus(y0.data).div(2 * eps)
     }
 
-    let x0 = new Variable(Arr(1))
-    let x1 = new Variable(Arr(1))
-    let t = add(x0, x1)
-    let y = add(x0, t)
-    y.backward()
-    console.log(y.grad, t.grad)
-    console.log(x0.grad, x1.grad)
+    let x = new Variable(Arr([[1,2,3], [4,5,6]]))
+    x.name = "x"
 
-
-    no_grad(() => {
-        let x = new Variable(Arr(2))
-        let y = square(x)
-        y.backward()
-    })
+    console.log(x.name)
+    console.log(x.shape)
+    console.log(x.view)
 
 })()
