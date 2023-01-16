@@ -116,6 +116,13 @@
     }
 
 
+    function as_variable(obj) {
+        if(obj instanceof Variable) {
+            return obj
+        }
+        return new Variable(obj)
+    }
+
     function as_array(x) {
         if(typeof x === "number") {
             return Arr(x)
@@ -124,16 +131,16 @@
     }
 
 
-    function Function() {
+    function Operation() {
         let result = function() {
             return result.__call__.apply(result, arguments);
         }
-        Object.setPrototypeOf(result, Function.prototype)
+        Object.setPrototypeOf(result, Operation.prototype)
         return result;
     }
 
-    Function.prototype.__call__ = function() {
-        let inputs = Array.from(arguments)
+    Operation.prototype.__call__ = function() {
+        let inputs = Array.from(arguments).map(x => as_variable(x))
         let xs = inputs.map(x => x.data)
         let ys = this.forward.apply(this, xs)
         if(!(ys instanceof List)) {
@@ -150,22 +157,22 @@
         return outputs.length > 1 ? outputs : outputs[0]
     }
 
-    Function.prototype.forward = function() {
+    Operation.prototype.forward = function() {
         throw new Error("NotImplemented")
     }
 
-    Function.prototype.backward = function() {
+    Operation.prototype.backward = function() {
         throw new Error("NotImplemented")
     }
 
 
     function Square() {
-        let result = Function.call(this)
+        let result = Operation.call(this)
         Object.setPrototypeOf(result, Square.prototype)
         return result
     }
 
-    Square.prototype.__proto__ = Function.prototype
+    Square.prototype.__proto__ = Operation.prototype
 
     Square.prototype.forward = function(x) {
         let y = x.deepMap(v => Math.pow(v, 2))
@@ -180,12 +187,12 @@
 
 
     function Exp() {
-        let result = Function.call(this)
+        let result = Operation.call(this)
         Object.setPrototypeOf(result, Exp.prototype)
         return result
     }
 
-    Exp.prototype.__proto__ = Function.prototype
+    Exp.prototype.__proto__ = Operation.prototype
 
     Exp.prototype.forward = function(x) {
         let y = x.deepMap(v => Math.exp(v))
@@ -200,12 +207,12 @@
 
     
     function Add() {
-        let result = Function.call(this)
+        let result = Operation.call(this)
         Object.setPrototypeOf(result, Add.prototype)
         return result
     }
 
-    Add.prototype.__proto__ = Function.prototype
+    Add.prototype.__proto__ = Operation.prototype
 
     Add.prototype.forward = function(x0, x1) {
         let y = x0.plus(x1)
@@ -218,12 +225,12 @@
 
 
     function Mul() {
-        let result = Function.call(this)
+        let result = Operation.call(this)
         Object.setPrototypeOf(result, Mul.prototype)
         return result
     }
 
-    Mul.prototype.__proto__ = Function.prototype
+    Mul.prototype.__proto__ = Operation.prototype
 
     Mul.prototype.forward = function(x0, x1) {
         let y = x0.mul(x1)
@@ -246,10 +253,12 @@
     }
 
     function add(x0, x1) {
+        x1 = as_array(x1)
         return new Add()(x0, x1)
     }
 
     function mul(x0, x1) {
+        x1 = as_array(x1)
         return new Mul()(x0, x1)
     }
 
@@ -263,19 +272,18 @@
         return y1.data.minus(y0.data).div(2 * eps)
     }
 
-
     Variable.prototype.add = function(x) {return add(this, x)}
     Variable.prototype.mul = function(x) {return mul(this, x)}
 
-    let a = new Variable(Arr(3))
-    let b = new Variable(Arr(2))
-    let c = new Variable(Arr(1))
+    
+    let x = new Variable(Arr(2))
+    let y = x.add(Arr(3))
+    console.log(y)
 
-    let y = a.mul(b).add(c)
-    y.backward()
+    y = x.add(3)
+    console.log(y)
 
-    console.log(y.view)
-    console.log(a.grad)
-    console.log(b.grad)
+    y = x.mul(3).add(1)
+    console.log(y)
     
 })()

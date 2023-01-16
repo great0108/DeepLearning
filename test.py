@@ -22,6 +22,8 @@ def no_grad():
 
 
 class Variable:
+    __array_priority__ = 200
+
     def __init__(self, data, name=None):
         if data is not None:
             if not isinstance(data, np.ndarray):
@@ -101,6 +103,13 @@ class Variable:
                     y().grad = None  # y is weakref
 
 
+def as_variable(obj):
+    if isinstance(obj, Variable):
+        return obj
+    print(obj, type(obj))
+    return Variable(obj)
+
+
 def as_array(x):
     if np.isscalar(x):
         return np.array(x)
@@ -109,6 +118,8 @@ def as_array(x):
 
 class Function:
     def __call__(self, *inputs):
+        inputs = [as_variable(x) for x in inputs]
+
         xs = [x.data for x in inputs]
         ys = self.forward(*xs)
         if not isinstance(ys, tuple):
@@ -131,21 +142,6 @@ class Function:
         raise NotImplementedError()
 
 
-class Square(Function):
-    def forward(self, x):
-        y = x ** 2
-        return y
-
-    def backward(self, gy):
-        x = self.inputs[0].data
-        gx = 2 * x * gy
-        return gx
-
-
-def square(x):
-    return Square()(x)
-
-
 class Add(Function):
     def forward(self, x0, x1):
         y = x0 + x1
@@ -156,12 +152,36 @@ class Add(Function):
 
 
 def add(x0, x1):
+    x1 = as_array(x1)
     return Add()(x0, x1)
 
 
-x = Variable(np.array([[1, 2, 3], [4, 5, 6]]))
-x.name = 'x'
+class Mul(Function):
+    def forward(self, x0, x1):
+        y = x0 * x1
+        return y
 
-print(x.name)
-print(x.shape)
-print(x)
+    def backward(self, gy):
+        x0, x1 = self.inputs[0].data, self.inputs[1].data
+        return gy * x1, gy * x0
+
+
+def mul(x0, x1):
+    x1 = as_array(x1)
+    return Mul()(x0, x1)
+
+
+Variable.__add__ = add
+Variable.__radd__ = add
+Variable.__mul__ = mul
+Variable.__rmul__ = mul
+
+x = Variable(np.array(2.0))
+y = x + np.array(3.0)
+print(y)
+
+y = x + 3.0
+print(y)
+
+y = 3.0 * x + 1.0
+print(y)
