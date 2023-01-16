@@ -176,12 +176,5 @@ Variable.__radd__ = add
 Variable.__mul__ = mul
 Variable.__rmul__ = mul
 
-x = Variable(np.array(2.0))
-y = x + np.array(3.0)
-print(y)
-
-y = x + 3.0
-print(y)
-
-y = 3.0 * x + 1.0
-print(y)
+a = np.array([1,2,3])
+print(a ** a)

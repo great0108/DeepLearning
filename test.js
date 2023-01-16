@@ -1,9 +1,9 @@
 const Arr = require("./Arr")
 
 function a() {
-    return Array.from(arguments)
+    console.log(this)
+    return function() {}
 }
 
-let b = {a:1}
-let c = a(b, b)
-console.log(c[0] === c[1])
+console.log(a())
+console.log(new a())

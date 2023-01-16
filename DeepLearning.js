@@ -244,6 +244,86 @@
     }
 
 
+    function Neg() {
+        let result = Operation.call(this)
+        Object.setPrototypeOf(result, Neg.prototype)
+        return result
+    }
+
+    Neg.prototype.__proto__ = Operation.prototype
+
+    Neg.prototype.forward = function(x) {
+        return x.mul(-1)
+    }
+
+    Neg.prototype.backward = function(gy) {
+        return gy.mul(-1)
+    }
+
+    
+    function Sub() {
+        let result = Operation.call(this)
+        Object.setPrototypeOf(result, Sub.prototype)
+        return result
+    }
+
+    Sub.prototype.__proto__ = Operation.prototype
+
+    Sub.prototype.forward = function(x0, x1) {
+        let y = x0.minus(x1)
+        return y
+    }
+
+    Sub.prototype.backward = function(gy) {
+        return List(gy, gy.mul(-1))
+    }
+
+
+    function Div() {
+        let result = Operation.call(this)
+        Object.setPrototypeOf(result, Div.prototype)
+        return result
+    }
+
+    Div.prototype.__proto__ = Operation.prototype
+
+    Div.prototype.forward = function(x0, x1) {
+        let y = x0.div(x1)
+        return y
+    }
+
+    Div.prototype.backward = function(gy) {
+        let x0 = this.inputs[0].data
+        let x1 = this.inputs[1].data
+        let gx0 = gy.div(x1)
+        let gx1 = gy.mul(x0.mul(-1).div(x1.deepMap(v => Math.pow(v, 2))))
+        return List(gx0, gx1)
+    }
+
+
+    function Pow(c) { // c가 상수라고 가정했음
+        let result = Operation.call(this)
+        Object.setPrototypeOf(result, Pow.prototype)
+        result.c = c
+        return result
+    }
+
+    Pow.prototype.__proto__ = Operation.prototype
+
+    Pow.prototype.forward = function(x) {
+        let y = x.deepMap(v => Math.pow(v, this.c))
+        return y
+    }
+
+    Pow.prototype.backward = function(gy) {
+        let x = this.inputs[0].data
+        let c = this.c
+
+        let gx = x.deepMap(v => Math.pow(v, c-1)).mul(c).mul(gy)
+        return gx
+    }
+
+
     function square(x) {
         return new Square()(x)
     }
@@ -262,6 +342,34 @@
         return new Mul()(x0, x1)
     }
 
+    function neg(x) {
+        return new Neg()(x)
+    }
+
+    function sub(x0, x1) {
+        x1 = as_array(x1)
+        return new Sub()(x0, x1)
+    }
+
+    function rsub(x0, x1) {
+        x1 = as_array(x1)
+        return sub(x1, x0)
+    }
+
+    function div(x0, x1) {
+        x1 = as_array(x1)
+        return new Div()(x0, x1)
+    }
+
+    function rdiv(x0, x1) {
+        x1 = as_array(x1)
+        return div(x1, x0)
+    }
+
+    function pow(x, c) {
+        return new Pow(c)(x)
+    }
+
 
     function numerical_diff(f, x, eps) {
         eps = eps === undefined ? 1e-4 : eps
@@ -274,16 +382,29 @@
 
     Variable.prototype.add = function(x) {return add(this, x)}
     Variable.prototype.mul = function(x) {return mul(this, x)}
+    Variable.prototype.neg = function() {return neg(this)}
+    Variable.prototype.sub = function(x) {return sub(this, x)}
+    Variable.prototype.rsub = function(x) {return rsub(this, x)}
+    Variable.prototype.div = function(x) {return div(this, x)}
+    Variable.prototype.rdiv = function(x) {return rdiv(this, x)}
+    Variable.prototype.pow = function(c) {return pow(this, c)}
 
     
     let x = new Variable(Arr(2))
-    let y = x.add(Arr(3))
-    console.log(y)
+    let y = x.neg()
+    console.log(y.view)
 
-    y = x.add(3)
-    console.log(y)
+    let y1 = x.rsub(2)
+    let y2 = x.sub(1)
+    console.log(y1.view)
+    console.log(y2.view)
 
-    y = x.mul(3).add(1)
-    console.log(y)
+    y = x.rdiv(3)
+    console.log(y.view)
+
+    y = x.pow(3)
+    y.backward()
+    console.log(y.view)
+    console.log(x.grad)
     
 })()
