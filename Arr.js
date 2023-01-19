@@ -461,6 +461,13 @@ Object.defineProperty(Arr.prototype, "div", {
     writable : true
 })
 
+Object.defineProperty(Arr.prototype, "pow", {
+    value : function(arr) {
+        return this.cal(arr, (a, b) => Math.pow(a, b))
+    },
+    writable : true
+})
+
 Object.defineProperty(Arr.prototype, "view", {
     value : function(ndim, n) {
         ndim = ndim === undefined ? this.ndim() : ndim

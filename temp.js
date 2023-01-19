@@ -97,3 +97,8 @@ function my_sin(x, threshold) {
     }
     return y
 }
+
+function rosenbrock(x0, x1) {
+    let y = x1.minus(x0.pow(2)).pow(2).mul(100).plus(x0.minus(1).pow(2))
+    return y
+}
