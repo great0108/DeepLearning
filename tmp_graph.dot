@@ -1,0 +1,219 @@
+digraph g {
+1893055812656 [label="z", color=orange, style=filled]
+1893055812560 [label="Mul", color=lightblue, style=filled, shape=box]
+1893055791504 -> 1893055812560
+1893055812464 -> 1893055812560
+1893055812560 -> 1893055812656
+1893055791504 [label="", color=orange, style=filled]
+1893055812464 [label="", color=orange, style=filled]
+1893055812272 [label="Add", color=lightblue, style=filled, shape=box]
+1893055812176 -> 1893055812272
+1893055812368 -> 1893055812272
+1893055812272 -> 1893055812464
+1893055812176 [label="", color=orange, style=filled]
+1893055812368 [label="", color=orange, style=filled]
+1893055812080 [label="Mul", color=lightblue, style=filled, shape=box]
+1893055792512 -> 1893055812080
+1893055811984 -> 1893055812080
+1893055812080 -> 1893055812176
+1893055792512 [label="", color=orange, style=filled]
+1893055811984 [label="", color=orange, style=filled]
+1893055811888 [label="Add", color=lightblue, style=filled, shape=box]
+1893055794864 -> 1893055811888
+1893055811792 -> 1893055811888
+1893055811888 -> 1893055811984
+1893055794864 [label="", color=orange, style=filled]
+1893055811792 [label="", color=orange, style=filled]
+1893055795056 [label="Mul", color=lightblue, style=filled, shape=box]
+1893055795104 -> 1893055795056
+1893055811696 -> 1893055795056
+1893055795056 -> 1893055811792
+1893055795104 [label="", color=orange, style=filled]
+1893055811696 [label="", color=orange, style=filled]
+1893055794960 [label="Pow", color=lightblue, style=filled, shape=box]
+1893054003712 -> 1893055794960
+1893055794960 -> 1893055795104
+1893054003712 [label="y", color=orange, style=filled]
+1893055794768 [label="Sub", color=lightblue, style=filled, shape=box]
+1893055794192 -> 1893055794768
+1893055794672 -> 1893055794768
+1893055794768 -> 1893055794864
+1893055794192 [label="", color=orange, style=filled]
+1893055794672 [label="", color=orange, style=filled]
+1893055794576 [label="Mul", color=lightblue, style=filled, shape=box]
+1893055794480 -> 1893055794576
+1893054003712 -> 1893055794576
+1893055794576 -> 1893055794672
+1893055794480 [label="", color=orange, style=filled]
+1893054003712 [label="y", color=orange, style=filled]
+1893055794288 [label="Mul", color=lightblue, style=filled, shape=box]
+1893054003472 -> 1893055794288
+1893055794384 -> 1893055794288
+1893055794288 -> 1893055794480
+1893054003472 [label="x", color=orange, style=filled]
+1893055794384 [label="", color=orange, style=filled]
+1893055794096 [label="Add", color=lightblue, style=filled, shape=box]
+1893055793712 -> 1893055794096
+1893055794000 -> 1893055794096
+1893055794096 -> 1893055794192
+1893055793712 [label="", color=orange, style=filled]
+1893055794000 [label="", color=orange, style=filled]
+1893055793808 [label="Mul", color=lightblue, style=filled, shape=box]
+1893054003712 -> 1893055793808
+1893055793904 -> 1893055793808
+1893055793808 -> 1893055794000
+1893054003712 [label="y", color=orange, style=filled]
+1893055793904 [label="", color=orange, style=filled]
+1893055793616 [label="Add", color=lightblue, style=filled, shape=box]
+1893055793040 -> 1893055793616
+1893055793520 -> 1893055793616
+1893055793616 -> 1893055793712
+1893055793040 [label="", color=orange, style=filled]
+1893055793520 [label="", color=orange, style=filled]
+1893055793232 [label="Mul", color=lightblue, style=filled, shape=box]
+1893055793280 -> 1893055793232
+1893055793424 -> 1893055793232
+1893055793232 -> 1893055793520
+1893055793280 [label="", color=orange, style=filled]
+1893055793424 [label="", color=orange, style=filled]
+1893055793136 [label="Pow", color=lightblue, style=filled, shape=box]
+1893054003472 -> 1893055793136
+1893055793136 -> 1893055793280
+1893054003472 [label="x", color=orange, style=filled]
+1893055792848 [label="Sub", color=lightblue, style=filled, shape=box]
+1893055792944 -> 1893055792848
+1893055792752 -> 1893055792848
+1893055792848 -> 1893055793040
+1893055792944 [label="", color=orange, style=filled]
+1893055792752 [label="", color=orange, style=filled]
+1893055792464 [label="Mul", color=lightblue, style=filled, shape=box]
+1893054003472 -> 1893055792464
+1893055792656 -> 1893055792464
+1893055792464 -> 1893055792752
+1893054003472 [label="x", color=orange, style=filled]
+1893055792656 [label="", color=orange, style=filled]
+1893055792368 [label="Pow", color=lightblue, style=filled, shape=box]
+1893055792272 -> 1893055792368
+1893055792368 -> 1893055792512
+1893055792272 [label="", color=orange, style=filled]
+1893055792176 [label="Sub", color=lightblue, style=filled, shape=box]
+1893055791792 -> 1893055792176
+1893055792080 -> 1893055792176
+1893055792176 -> 1893055792272
+1893055791792 [label="", color=orange, style=filled]
+1893055792080 [label="", color=orange, style=filled]
+1893055791888 [label="Mul", color=lightblue, style=filled, shape=box]
+1893054003712 -> 1893055791888
+1893055791984 -> 1893055791888
+1893055791888 -> 1893055792080
+1893054003712 [label="y", color=orange, style=filled]
+1893055791984 [label="", color=orange, style=filled]
+1893055791600 [label="Mul", color=lightblue, style=filled, shape=box]
+1893054003472 -> 1893055791600
+1893055791696 -> 1893055791600
+1893055791600 -> 1893055791792
+1893054003472 [label="x", color=orange, style=filled]
+1893055791696 [label="", color=orange, style=filled]
+1893055791312 [label="Add", color=lightblue, style=filled, shape=box]
+1893055791216 -> 1893055791312
+1893055791408 -> 1893055791312
+1893055791312 -> 1893055791504
+1893055791216 [label="", color=orange, style=filled]
+1893055791408 [label="", color=orange, style=filled]
+1893055717328 [label="Mul", color=lightblue, style=filled, shape=box]
+1893054085152 -> 1893055717328
+1893055717232 -> 1893055717328
+1893055717328 -> 1893055791216
+1893054085152 [label="", color=orange, style=filled]
+1893055717232 [label="", color=orange, style=filled]
+1893055717136 [label="Add", color=lightblue, style=filled, shape=box]
+1893055716560 -> 1893055717136
+1893055717040 -> 1893055717136
+1893055717136 -> 1893055717232
+1893055716560 [label="", color=orange, style=filled]
+1893055717040 [label="", color=orange, style=filled]
+1893055716752 [label="Mul", color=lightblue, style=filled, shape=box]
+1893055716800 -> 1893055716752
+1893055716944 -> 1893055716752
+1893055716752 -> 1893055717040
+1893055716800 [label="", color=orange, style=filled]
+1893055716944 [label="", color=orange, style=filled]
+1893055716656 [label="Pow", color=lightblue, style=filled, shape=box]
+1893054003712 -> 1893055716656
+1893055716656 -> 1893055716800
+1893054003712 [label="y", color=orange, style=filled]
+1893055716464 [label="Add", color=lightblue, style=filled, shape=box]
+1893055715888 -> 1893055716464
+1893055716368 -> 1893055716464
+1893055716464 -> 1893055716560
+1893055715888 [label="", color=orange, style=filled]
+1893055716368 [label="", color=orange, style=filled]
+1893055716272 [label="Mul", color=lightblue, style=filled, shape=box]
+1893055716176 -> 1893055716272
+1893054003712 -> 1893055716272
+1893055716272 -> 1893055716368
+1893055716176 [label="", color=orange, style=filled]
+1893054003712 [label="y", color=orange, style=filled]
+1893055715984 [label="Mul", color=lightblue, style=filled, shape=box]
+1893054003472 -> 1893055715984
+1893055716080 -> 1893055715984
+1893055715984 -> 1893055716176
+1893054003472 [label="x", color=orange, style=filled]
+1893055716080 [label="", color=orange, style=filled]
+1893055715792 [label="Sub", color=lightblue, style=filled, shape=box]
+1893055715360 -> 1893055715792
+1893055715696 -> 1893055715792
+1893055715792 -> 1893055715888
+1893055715360 [label="", color=orange, style=filled]
+1893055715696 [label="", color=orange, style=filled]
+1893055715504 [label="Mul", color=lightblue, style=filled, shape=box]
+1893054003712 -> 1893055715504
+1893055715600 -> 1893055715504
+1893055715504 -> 1893055715696
+1893054003712 [label="y", color=orange, style=filled]
+1893055715600 [label="", color=orange, style=filled]
+1893055714448 [label="Add", color=lightblue, style=filled, shape=box]
+1893055714544 -> 1893055714448
+1893055715264 -> 1893055714448
+1893055714448 -> 1893055715360
+1893055714544 [label="", color=orange, style=filled]
+1893055715264 [label="", color=orange, style=filled]
+1893055714784 [label="Mul", color=lightblue, style=filled, shape=box]
+1893055714736 -> 1893055714784
+1893055715120 -> 1893055714784
+1893055714784 -> 1893055715264
+1893055714736 [label="", color=orange, style=filled]
+1893055715120 [label="", color=orange, style=filled]
+1893055714592 [label="Pow", color=lightblue, style=filled, shape=box]
+1893054003472 -> 1893055714592
+1893055714592 -> 1893055714736
+1893054003472 [label="x", color=orange, style=filled]
+1893054158112 [label="Sub", color=lightblue, style=filled, shape=box]
+1893054158160 -> 1893054158112
+1893054158064 -> 1893054158112
+1893054158112 -> 1893055714544
+1893054158160 [label="", color=orange, style=filled]
+1893054158064 [label="", color=orange, style=filled]
+1893054084912 [label="Mul", color=lightblue, style=filled, shape=box]
+1893054003472 -> 1893054084912
+1893054085200 -> 1893054084912
+1893054084912 -> 1893054158064
+1893054003472 [label="x", color=orange, style=filled]
+1893054085200 [label="", color=orange, style=filled]
+1893054084144 [label="Pow", color=lightblue, style=filled, shape=box]
+1893054083712 -> 1893054084144
+1893054084144 -> 1893054085152
+1893054083712 [label="", color=orange, style=filled]
+1893054005008 [label="Add", color=lightblue, style=filled, shape=box]
+1893054004528 -> 1893054005008
+1893054083328 -> 1893054005008
+1893054005008 -> 1893054083712
+1893054004528 [label="", color=orange, style=filled]
+1893054083328 [label="", color=orange, style=filled]
+1893054004000 [label="Add", color=lightblue, style=filled, shape=box]
+1893054003472 -> 1893054004000
+1893054003712 -> 1893054004000
+1893054004000 -> 1893054004528
+1893054003472 [label="x", color=orange, style=filled]
+1893054003712 [label="y", color=orange, style=filled]
+}
