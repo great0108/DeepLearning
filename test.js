@@ -1,4 +1,5 @@
 const {Variable, Operation} = require("./core")
+const {sin} = require("./functions")
 const Arr = require("./Arr")
 
 function f(x) {
@@ -6,22 +7,20 @@ function f(x) {
     return y
 }
 
-let x = new Variable(Arr(2))
-let iters = 10
+let x = new Variable(Arr.range(-3, 3, 0.5))
+let y = sin(x)
+y.backward(true)
 
-for(let i = 0; i < iters; i++) {
-    console.log(i, x.view)
+let logs = [y.data]
 
-    let y = f(x)
-    x.name = "x"
-    x.cleargrad()
-    y.backward(false, true)
-
+for(let i = 0; i < 3; i++) {
+    console.log(x.grad)
+    logs.push(x.grad.data)
     let gx = x.grad
     x.cleargrad()
     gx.backward(true)
-    gx2 = x.grad
-
-    x.data = x.data.minus(gx.data.div(gx2.data))
 }
-console.log(x.data)
+
+for(let log of logs) {
+    console.log(log)
+}

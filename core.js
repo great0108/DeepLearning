@@ -85,7 +85,7 @@
         this.grad = null
     }
 
-    Variable.prototype.backward = function(retain_grad, create_graph) {
+    Variable.prototype.backward = function(create_graph, retain_grad) {
         create_graph = create_graph === undefined ? false : create_graph
         if(this.grad === null) {
             this.grad = new Variable(Arr.fill(this.data.shape(), 1))
@@ -133,6 +133,10 @@
                 f.outputs.forEach(y => y.grad = null)
             }
         }
+    }
+
+    Variable.prototype.deepMap = function(fn) {
+        this.data = this.data.deepMap(fn)
     }
 
 
