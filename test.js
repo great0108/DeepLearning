@@ -6,10 +6,6 @@ function f(x) {
     return y
 }
 
-function gx2(x) {
-    return x.pow(2).mul(12).minus(4)
-}
-
 let x = new Variable(Arr(2))
 let iters = 10
 
@@ -17,9 +13,15 @@ for(let i = 0; i < iters; i++) {
     console.log(i, x.view)
 
     let y = f(x)
+    x.name = "x"
     x.cleargrad()
-    y.backward()
+    y.backward(false, true)
 
-    x.data = x.data.minus(x.grad.div(gx2(x.data)))
+    let gx = x.grad
+    x.cleargrad()
+    gx.backward(true)
+    gx2 = x.grad
+
+    x.data = x.data.minus(gx.data.div(gx2.data))
 }
 console.log(x.data)

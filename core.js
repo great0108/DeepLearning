@@ -85,9 +85,10 @@
         this.grad = null
     }
 
-    Variable.prototype.backward = function(retain_grad) {
+    Variable.prototype.backward = function(retain_grad, create_graph) {
+        create_graph = create_graph === undefined ? false : create_graph
         if(this.grad === null) {
-            this.grad = Arr.fill(this.data.shape(), 1)
+            this.grad = new Variable(Arr.fill(this.data.shape(), 1))
         }
 
         let funcs = []
@@ -105,25 +106,28 @@
 
         while(funcs.length > 0) {
             let f = funcs.pop()
-            let gys = f.outputs.map(output => as_array(output.grad))
-            let gxs = f.backward.apply(f, gys)
-            if(!(gxs instanceof List)) {
-                gxs = List(gxs)
-            }
+            let gys = f.outputs.map(output => output.grad)
 
-            for(let i = 0; i < gxs.length; i++) {
-                let x = f.inputs[i]
-                let gx = gxs[i]
-                if(x.grad === null) {
-                    x.grad = gx
-                } else {
-                    x.grad = x.grad.plus(gx)
+            using_config("enable_backprop", create_graph, () => {
+                let gxs = f.backward.apply(f, gys)
+                if(!(gxs instanceof List)) {
+                    gxs = List(gxs)
                 }
 
-                if(x.creator !== null) {
-                    add_func(x.creator)
+                for(let i = 0; i < gxs.length; i++) {
+                    let x = f.inputs[i]
+                    let gx = gxs[i]
+                    if(x.grad === null) {
+                        x.grad = gx
+                    } else {
+                        x.grad = x.grad.plus(gx)
+                    }
+
+                    if(x.creator !== null) {
+                        add_func(x.creator)
+                    }
                 }
-            }
+            })
 
             if(!retain_grad) {
                 f.outputs.forEach(y => y.grad = null)
@@ -199,8 +203,8 @@
     }
 
     Mul.prototype.backward = function(gy) {
-        let x0 = this.inputs[0].data
-        let x1 = this.inputs[1].data
+        let x0 = this.inputs[0]
+        let x1 = this.inputs[1]
         return List(x1.mul(gy), x0.mul(gy))
     }
 
@@ -254,10 +258,10 @@
     }
 
     Div.prototype.backward = function(gy) {
-        let x0 = this.inputs[0].data
-        let x1 = this.inputs[1].data
+        let x0 = this.inputs[0]
+        let x1 = this.inputs[1]
         let gx0 = gy.div(x1)
-        let gx1 = gy.mul(x0.mul(-1).div(x1.deepMap(v => Math.pow(v, 2))))
+        let gx1 = gy.mul(x0.mul(-1).div(x1.pow(2)))
         return List(gx0, gx1)
     }
 
@@ -272,15 +276,15 @@
     Pow.prototype.__proto__ = Operation.prototype
 
     Pow.prototype.forward = function(x) {
-        let y = x.deepMap(v => Math.pow(v, this.c))
+        let y = x.pow(this.c)
         return y
     }
 
     Pow.prototype.backward = function(gy) {
-        let x = this.inputs[0].data
+        let x = this.inputs[0]
         let c = this.c
 
-        let gx = x.deepMap(v => Math.pow(v, c-1)).mul(c).mul(gy)
+        let gx = x.pow(c-1).mul(c).mul(gy)
         return gx
     }
 
