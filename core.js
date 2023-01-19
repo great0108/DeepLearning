@@ -323,11 +323,11 @@
         return new Pow(c)(x)
     }
 
-    Variable.prototype.add = function(x) {return add(this, x)}
+    Variable.prototype.plus = function(x) {return add(this, x)}
     Variable.prototype.mul = function(x) {return mul(this, x)}
     Variable.prototype.neg = function() {return neg(this)}
-    Variable.prototype.sub = function(x) {return sub(this, x)}
-    Variable.prototype.rsub = function(x) {return rsub(this, x)}
+    Variable.prototype.minus = function(x) {return sub(this, x)}
+    Variable.prototype.rminus = function(x) {return rsub(this, x)}
     Variable.prototype.div = function(x) {return div(this, x)}
     Variable.prototype.rdiv = function(x) {return rdiv(this, x)}
     Variable.prototype.pow = function(c) {return pow(this, c)}
