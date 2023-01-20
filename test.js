@@ -9,6 +9,8 @@ y.backward(true)
 iters = 1
 for(let i = 0; i < iters; i++) {
     let gx = x.grad
+    console.log(x)
+    console.log(gx)
     x.cleargrad()
     gx.backward(true)
 }

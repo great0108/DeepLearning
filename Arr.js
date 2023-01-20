@@ -447,6 +447,13 @@ Object.defineProperty(Arr.prototype, "minus", {
     writable : true
 })
 
+Object.defineProperty(Arr.prototype, "rminus", {
+    value : function(arr) {
+        return this.cal(arr, (a, b) => b-a)
+    },
+    writable : true
+})
+
 Object.defineProperty(Arr.prototype, "mul", {
     value : function(arr) {
         return this.cal(arr, (a, b) => a*b)
@@ -457,6 +464,13 @@ Object.defineProperty(Arr.prototype, "mul", {
 Object.defineProperty(Arr.prototype, "div", {
     value : function(arr) {
         return this.cal(arr, (a, b) => a/b)
+    },
+    writable : true
+})
+
+Object.defineProperty(Arr.prototype, "rdiv", {
+    value : function(arr) {
+        return this.cal(arr, (a, b) => b/a)
     },
     writable : true
 })

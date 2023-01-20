@@ -53,29 +53,6 @@ function numerical_diff(f, x, eps=1e-4) {
     return y1.data.minus(y0.data).div(2 * eps)
 }
 
-function Sin() {
-    let result = Operation.call(this)
-    Object.setPrototypeOf(result, Sin.prototype)
-    return result
-}
-
-Sin.prototype.__proto__ = Operation.prototype
-
-Sin.prototype.forward = function(x) {
-    let y = x.deepMap(v => Math.sin(v))
-    return y
-}
-
-Sin.prototype.backward = function(gy) {
-    let x = this.inputs[0].data
-    let gx = x.deepMap(v => Math.cos(v)).mul(gy)
-    return gx
-}
-
-function sin(x) {
-    return new Sin()(x)
-}
-
 function factorial(a) {
     let result = 1
     for(let i = a; i > 1; i--) {
@@ -95,10 +72,5 @@ function my_sin(x, threshold) {
             break
         }
     }
-    return y
-}
-
-function rosenbrock(x0, x1) {
-    let y = x1.minus(x0.pow(2)).pow(2).mul(100).plus(x0.minus(1).pow(2))
     return y
 }

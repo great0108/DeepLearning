@@ -108,7 +108,7 @@ class Variable:
                         x.grad = gx
                     else:
                         x.grad = x.grad + gx
-                    if x.creater is not None:
+                    if x.creator is not None:
                         add_func(x.creator)
             
             if not retain_grad:
@@ -139,11 +139,11 @@ class Function:
         outputs = [Variable(as_array(y)) for y in ys]
 
         if Config.enable_backprop: # 역전파 활성/비활성 모드 제어 부분
+            self.generation = max([x.generation for x in inputs])
             for output in outputs:
                 output.set_creator(self) # 계산 그래프 연결
             self.inputs = inputs
             self.outputs = [weakref.ref(output) for output in outputs]
-            self.generation = max([x.generation for x in inputs])
         
         return outputs if len(outputs) > 1 else outputs[0]
 
@@ -316,17 +316,21 @@ def tanh(x):
     return Tanh()(x)
 
 
-x = Variable(np.linspace(-7, 7, 200))
-y = sin(x)
+x = Variable(np.array(1.0))
+y = tanh(x)
+x.name = 'x'
+y.name = 'y'
 y.backward(create_graph=True)
 
-logs = [y.data]
+iters = 1
 
-for i in range(3):
-    logs.append(x.grad.data)
+for i in range(iters):
     gx = x.grad
+    print(x)
+    print(gx)
     x.cleargrad()
     gx.backward(create_graph=True)
 
-gx - x.grad
+gx = x.grad
+gx.name = 'gx' + str(iters + 1)
 print(gx)

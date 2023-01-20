@@ -45,7 +45,7 @@
 
     function Tanh() {
         let result = Operation.call(this)
-        Object.setPrototypeOf(result, Cos.prototype)
+        Object.setPrototypeOf(result, Tanh.prototype)
         return result
     }
 
@@ -57,7 +57,7 @@
     }
 
     Tanh.prototype.backward = function(gy) {
-        let y = self.outputs[0]
+        let y = this.outputs[0]
         let gx = gy.mul(y.pow(2).rminus(1))
         return gx
     }
