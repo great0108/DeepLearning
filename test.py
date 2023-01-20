@@ -316,21 +316,3 @@ def tanh(x):
     return Tanh()(x)
 
 
-x = Variable(np.array(1.0))
-y = tanh(x)
-x.name = 'x'
-y.name = 'y'
-y.backward(create_graph=True)
-
-iters = 1
-
-for i in range(iters):
-    gx = x.grad
-    print(x)
-    print(gx)
-    x.cleargrad()
-    gx.backward(create_graph=True)
-
-gx = x.grad
-gx.name = 'gx' + str(iters + 1)
-print(gx)

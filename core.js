@@ -1,6 +1,7 @@
 (function() {
     "use strict"
     const Arr = require("./Arr")
+    const Callable = require("./Callable")
 
     function List() {
         let arr = Array.from(arguments)
@@ -141,12 +142,10 @@
 
 
     function Operation() {
-        let result = function() {
-            return result.__call__.apply(result, arguments);
-        }
-        Object.setPrototypeOf(result, Operation.prototype)
-        return result;
+        return Callable.inherit(Operation)
     }
+
+    Operation.inherit = Callable.inherit
 
     Operation.prototype.__call__ = function() {
         let inputs = Array.from(arguments).map(x => as_variable(x))
@@ -176,9 +175,7 @@
 
     
     function Add() {
-        let result = Operation.call(this)
-        Object.setPrototypeOf(result, Add.prototype)
-        return result
+        return Operation.inherit(Add)
     }
 
     Add.prototype.__proto__ = Operation.prototype
@@ -194,9 +191,7 @@
 
 
     function Mul() {
-        let result = Operation.call(this)
-        Object.setPrototypeOf(result, Mul.prototype)
-        return result
+        return Operation.inherit(Mul)
     }
 
     Mul.prototype.__proto__ = Operation.prototype
@@ -214,9 +209,7 @@
 
 
     function Neg() {
-        let result = Operation.call(this)
-        Object.setPrototypeOf(result, Neg.prototype)
-        return result
+        return Operation.inherit(Neg)
     }
 
     Neg.prototype.__proto__ = Operation.prototype
@@ -231,9 +224,7 @@
 
     
     function Sub() {
-        let result = Operation.call(this)
-        Object.setPrototypeOf(result, Sub.prototype)
-        return result
+        return Operation.inherit(Sub)
     }
 
     Sub.prototype.__proto__ = Operation.prototype
@@ -249,9 +240,7 @@
 
 
     function Div() {
-        let result = Operation.call(this)
-        Object.setPrototypeOf(result, Div.prototype)
-        return result
+        return Operation.inherit(Div)
     }
 
     Div.prototype.__proto__ = Operation.prototype
@@ -271,8 +260,7 @@
 
 
     function Pow(c) { // c가 상수라고 가정했음
-        let result = Operation.call(this)
-        Object.setPrototypeOf(result, Pow.prototype)
+        let result = Operation.inherit(Pow)
         result.c = c
         return result
     }
@@ -295,21 +283,21 @@
 
     function add(x0, x1) {
         x1 = as_array(x1)
-        return new Add()(x0, x1)
+        return Add()(x0, x1)
     }
 
     function mul(x0, x1) {
         x1 = as_array(x1)
-        return new Mul()(x0, x1)
+        return Mul()(x0, x1)
     }
 
     function neg(x) {
-        return new Neg()(x)
+        return Neg()(x)
     }
 
     function sub(x0, x1) {
         x1 = as_array(x1)
-        return new Sub()(x0, x1)
+        return Sub()(x0, x1)
     }
 
     function rsub(x0, x1) {
@@ -319,7 +307,7 @@
 
     function div(x0, x1) {
         x1 = as_array(x1)
-        return new Div()(x0, x1)
+        return Div()(x0, x1)
     }
 
     function rdiv(x0, x1) {
@@ -328,7 +316,7 @@
     }
 
     function pow(x, c) {
-        return new Pow(c)(x)
+        return Pow(c)(x)
     }
 
     Variable.prototype.plus = function(x) {return add(this, x)}

@@ -4,9 +4,7 @@
     const {Operation, Variable, as_variable, as_array} = require("./core")
 
     function Sin() {
-        let result = Operation.call(this)
-        Object.setPrototypeOf(result, Sin.prototype)
-        return result
+        return Operation.inherit(Sin)
     }
     
     Sin.prototype.__proto__ = Operation.prototype
@@ -24,9 +22,7 @@
 
 
     function Cos() {
-        let result = Operation.call(this)
-        Object.setPrototypeOf(result, Cos.prototype)
-        return result
+        return Operation.inherit(Cos)
     }
 
     Cos.prototype.__proto__ = Operation.prototype
@@ -44,9 +40,7 @@
 
 
     function Tanh() {
-        let result = Operation.call(this)
-        Object.setPrototypeOf(result, Tanh.prototype)
-        return result
+        return Operation.inherit(Tanh)
     }
 
     Tanh.prototype.__proto__ = Operation.prototype
@@ -63,19 +57,62 @@
     }
 
 
+    function Exp() {
+        return Operation.inherit(Exp)
+    }
+
+    Exp.prototype.__proto__ = Operation.prototype
+
+    Exp.prototype.forward = function(x) {
+        let y = x.deepMap(v => Math.exp(v))
+        return y
+    }
+
+    Exp.prototype.backward = function(gy) {
+        let y = this.outputs[0]
+        let gx = gy.mul(y)
+        return gx
+    }
+
+
+    function Log() {
+        return Operation.inherit(Log)
+    }
+
+    Log.prototype.__proto__ = Operation.prototype
+
+    Log.prototype.forward = function(x) {
+        let y = x.deepMap(v => Math.log(v))
+        return y
+    }
+
+    Log.prototype.backward = function(gy) {
+        let x = this.inputs[0]
+        let gx = gy.div(x)
+        return gx
+    }
+
+
     
     function sin(x) {
-        return new Sin()(x)
+        return Sin()(x)
     }
 
     function cos(x) {
-        return new Cos()(x)
+        return Cos()(x)
     }
 
     function tanh(x) {
-        return new Tanh()(x)
+        return Tanh()(x)
     }
 
+    function exp(x) {
+        return Exp()(x)
+    }
+
+    function log(x) {
+        return Log()(x)
+    }
 
 
     module.exports = {
