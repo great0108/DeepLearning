@@ -34,7 +34,7 @@ Arr.fill = function(size, value) {
     size = Array.isArray(size) ? size : Array.of(size)
     if(Array.isArray(value)) {
         value = Arr(value)
-        let a = value.shape()
+        let a = value.shape
         if(a.length > size.length || !a.same(size.slice(-a.length))) {
             throw new Error("지정한 크기에 값을 채울 수 없습니다.")
         }
@@ -72,8 +72,8 @@ Arr.range = function(start, end, step) {
 }
 
 Arr.calShape = function(arr1, arr2) {
-    let shape1 = arr1.shape().reverse()
-    let shape2 = arr2.shape().reverse()
+    let shape1 = arr1.shape.reverse()
+    let shape2 = arr2.shape.reverse()
     let i = 0
     let shape = []
     while(shape1[i] !== undefined || shape2[i] !== undefined) {
@@ -136,34 +136,31 @@ Object.defineProperty(Arr.prototype, "same", {
 })
 
 Object.defineProperty(Arr.prototype, "shape", {
-    value : function() {
+    get : function() {
         if(this.every(v => !Array.isArray(v))) {
             return Arr(this.length)
         }
         if(this.every(v => Array.isArray(v))) {
-            let arr = this.map(v => v.shape())
+            let arr = this.map(v => v.shape)
             if(arr.every(v => arr[0].same(v))) {
                 arr[0].unshift(this.length)
                 return arr[0]
             }
         }
         throw new Error("크기가 일정하지 않습니다.")
-    },
-    writable : true
+    }
 })
 
 Object.defineProperty(Arr.prototype, "size", {
-    value : function() {
-        return this.shape().reduce((a, v) => a*v, 1)
-    },
-    writable : true
+    get : function() {
+        return this.shape.reduce((a, v) => a*v, 1)
+    }
 })
 
 Object.defineProperty(Arr.prototype, "ndim", {
-    value : function() {
-        return this.shape().length
-    },
-    writable : true
+    get : function() {
+        return this.shape.length
+    }
 })
 
 Object.defineProperty(Arr.prototype, "get", {
@@ -196,7 +193,7 @@ Object.defineProperty(Arr.prototype, "set", {
 
 Object.defineProperty(Arr.prototype, "deepFor", {
     value : function(fn, index, size) {
-        size = size === undefined ? this.shape() : size
+        size = size === undefined ? this.shape : size
         index = index === undefined ? [] : index
         if(size.length-1 === index.length) {
             index.push(0)
@@ -216,7 +213,7 @@ Object.defineProperty(Arr.prototype, "deepFor", {
 
 Object.defineProperty(Arr.prototype, "deepMap", {
     value : function(fn, index, size) {
-        size = size === undefined ? this.shape() : size
+        size = size === undefined ? this.shape : size
         index = index === undefined ? [] : index
         let arr = []
         if(size.length-1 === index.length) {
@@ -288,7 +285,7 @@ Object.defineProperty(Arr.prototype, "overlap", {
         end = end === undefined ? [] : end
         end = Array.isArray(end) ? end : Array.of(end)
     
-        let size = this.shape()
+        let size = this.shape
         while(start.length < size.length) {
             start.push(0)
         }
@@ -318,7 +315,7 @@ Object.defineProperty(Arr.prototype, "expand", {
             }
             return temp
         }
-        let ndim = this.ndim()
+        let ndim = this.ndim
         axis = axis >= 0 ? axis : ndim + axis + 1
         if(ndim < axis || axis < 0) {
             throw new Error("차원이 배열을 벗어났습니다.")
@@ -345,8 +342,8 @@ Object.defineProperty(Arr.prototype, "squeeze", {
     value : function(axis) {
         if(axis === undefined) {
             let temp = this
-            while(Array.isArray(temp) && temp.shape().includes(1)) {
-                temp = temp.squeeze(temp.shape().indexOf(1))
+            while(Array.isArray(temp) && temp.shape.includes(1)) {
+                temp = temp.squeeze(temp.shape.indexOf(1))
             }
             return temp
         }
@@ -358,7 +355,7 @@ Object.defineProperty(Arr.prototype, "squeeze", {
             }
             return temp
         }
-        let size = this.shape()
+        let size = this.shape
         axis = axis >= 0 ? axis : size.length + axis
         if(size.length <= axis || axis < 0) {
             throw new Error("차원이 배열을 벗어났습니다.")
@@ -388,7 +385,7 @@ Object.defineProperty(Arr.prototype, "broadcast", {
         shape = arguments.length === 1 
         ? (Array.isArray(shape) ? shape : Array.of(shape)) 
         : Array.from(arguments)
-        let size = this.shape().reverse()
+        let size = this.shape.reverse()
         shape = shape.slice().reverse()
         let temp = this
         for(let i = 0; i < shape.length; i++) {
@@ -483,8 +480,14 @@ Object.defineProperty(Arr.prototype, "pow", {
 })
 
 Object.defineProperty(Arr.prototype, "view", {
+    get : function() {
+        return this._view()
+    }
+})
+
+Object.defineProperty(Arr.prototype, "_view", {
     value : function(ndim, n) {
-        ndim = ndim === undefined ? this.ndim() : ndim
+        ndim = ndim === undefined ? this.ndim : ndim
         n = n === undefined ? ndim : n
         let result = ""
         if(ndim == 1) {
@@ -498,7 +501,7 @@ Object.defineProperty(Arr.prototype, "view", {
         }
         ndim -= 1
         for(let i = 0; i < this.length; i++) {
-            result += this[i].view(ndim, n)
+            result += this[i]._view(ndim, n)
             if(i !== this.length-1) {
                 result += "\n".repeat(ndim) + " ".repeat(n-ndim)
             }
@@ -554,7 +557,7 @@ Object.defineProperty(Arr.prototype, "reshape", {
 
 Object.defineProperty(Arr.prototype, "swapaxis", {
     value : function(axis1, axis2) {
-        let size = this.shape()
+        let size = this.shape
         axis1 = axis1 >= 0 ? axis1 : size.length + axis1
         axis2 = axis2 >= 0 ? axis2 : size.length + axis2
         if(axis1 >= size.length || axis1 < 0) {
@@ -581,7 +584,7 @@ Object.defineProperty(Arr.prototype, "swapaxis", {
 Object.defineProperty(Arr.prototype, "calaxis", {
     value : function(axis, fn, index, size, len) {
         if(size === undefined) {
-            size = this.shape()
+            size = this.shape
             axis = axis >= 0 ? axis : size.length + axis
             if(axis >= size.length || axis < 0) {
                 throw new Error("차원이 배열을 벗어났습니다.")
@@ -631,8 +634,8 @@ Object.defineProperty(Arr.prototype, "sum", {
 })
 
 Object.defineProperty(Arr.prototype, "T", {
-    value : function() {
-        let ndim = this.ndim()
+    get : function() {
+        let ndim = this.ndim
         if(ndim == 1) {
             return this.slice()
         }
@@ -657,7 +660,7 @@ Object.defineProperty(Arr.prototype, "flip", {
         if(axis === undefined || axis === 0) {
             return this._flip()
         }
-        let size = this.shape()
+        let size = this.shape
         axis = axis >= 0 ? axis : size.length + axis
         if(size.length <= axis || axis < 0) {
             throw new Error("차원이 배열을 벗어났습니다.")
@@ -685,7 +688,7 @@ Object.defineProperty(Arr.prototype, "_flip", {
 Object.defineProperty(Arr.prototype, "select", {
     value : function(index, axis) {
         axis = axis === undefined ? 0 : axis
-        let size = this.shape()
+        let size = this.shape
         axis = axis >= 0 ? axis : size.length + axis
         if(size.length <= axis || axis < 0) {
             throw new Error("차원이 배열을 벗어났습니다.")

@@ -93,7 +93,54 @@
     }
 
 
-    
+    function Reshape(shape) {
+        let result = Operation.inherit(Reshape)
+        result.shape = shape
+        return result
+    }
+
+    Reshape.prototype.__proto__ = Operation.prototype
+
+    Reshape.prototype.forward = function(x) {
+        this.x_shape = x.shape
+        let y = x.reshape(this.shape)
+        return y
+    }
+
+    Reshape.prototype.backward = function(gy) {
+        return reshape(gy, this.x_shape)
+    }
+
+
+    function Transpose(axes) {
+        let result = Operation.inherit(Transpose)
+        result.axes = axes
+        return result
+    }
+
+    Transpose.prototype.__proto__ = Operation.prototype
+
+    Transpose.prototype.forward = function(x) {
+        let y = x.a
+    }
+
+
+    function Sum(axis, keepdims) {
+        let result = Operation.inherit(Sum)
+        result.axis = axis
+        result.keepdims = keepdims
+        return result
+    }
+
+    Sum.prototype.__proto__ = Operation.prototype
+
+    Sum.prototype.forward = function(x) {
+        this.x_shape = x.shape
+        let y = x.sum(axis=this.axis, keepdims=this.keepdims)
+        return y
+    }
+
+
     function sin(x) {
         return Sin()(x)
     }
@@ -114,10 +161,19 @@
         return Log()(x)
     }
 
+    function reshape(x, shape) {
+        if(x.shape == shape) {
+            return as_variable(x)
+        }
+        return Reshape(shape)(x)
+    }
+
 
     module.exports = {
         sin : sin,
         cos : cos,
-        tanh : tanh
+        tanh : tanh,
+        exp : exp,
+        log : log
     }
 })()

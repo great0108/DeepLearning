@@ -61,13 +61,13 @@
 
     Object.defineProperties(Variable.prototype, {
         shape : {
-            get() {return this.data.shape()}
+            get() {return this.data.shape}
         },
         ndim : {
-            get() {return this.data.ndim()}
+            get() {return this.data.ndim}
         },
         size : {
-            get() {return this.data.size()}
+            get() {return this.data.size}
         },
         length : {
             get() {return this.data.length}
@@ -89,7 +89,7 @@
     Variable.prototype.backward = function(create_graph, retain_grad) {
         create_graph = create_graph === undefined ? false : create_graph
         if(this.grad === null) {
-            this.grad = new Variable(Arr.fill(this.data.shape(), 1))
+            this.grad = new Variable(Arr.fill(this.data.shape, 1))
         }
 
         let funcs = []

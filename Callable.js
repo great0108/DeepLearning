@@ -28,8 +28,5 @@
 		return x+2
 	}
 
-	let a = Callable2()
-	console.log(a(1), a.a())
-
 	module.exports = Callable
 })()

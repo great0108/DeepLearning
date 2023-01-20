@@ -315,4 +315,7 @@ class Tanh(Function):
 def tanh(x):
     return Tanh()(x)
 
-
+b = np.arange(6).reshape([1,2,3])
+print(b)
+print(b.transpose(1, 0, 2))
+print(b.transpose(0, 2, 1))
