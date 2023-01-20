@@ -42,6 +42,27 @@
         return gx
     }
 
+
+    function Tanh() {
+        let result = Operation.call(this)
+        Object.setPrototypeOf(result, Cos.prototype)
+        return result
+    }
+
+    Tanh.prototype.__proto__ = Operation.prototype
+
+    Tanh.prototype.forward = function(x) {
+        let y = x.deepMap(v => Math.tanh(v))
+        return y
+    }
+
+    Tanh.prototype.backward = function(gy) {
+        let y = self.outputs[0]
+        let gx = gy.mul(y.pow(2).rminus(1))
+        return gx
+    }
+
+
     
     function sin(x) {
         return new Sin()(x)
@@ -51,10 +72,15 @@
         return new Cos()(x)
     }
 
+    function tanh(x) {
+        return new Tanh()(x)
+    }
+
 
 
     module.exports = {
         sin : sin,
-        cos : cos
+        cos : cos,
+        tanh : tanh
     }
 })()

@@ -10,6 +10,9 @@ import io
 sys.stdout = io.TextIOWrapper(sys.stdout.detach(), encoding = 'utf-8')
 sys.stderr = io.TextIOWrapper(sys.stderr.detach(), encoding = 'utf-8')
 
+# =============================================================================
+# Config
+# =============================================================================
 class Config:
     enable_backprop = True
 
@@ -28,6 +31,9 @@ def no_grad():
     return using_config('enable_backprop', False)
 
 
+# =============================================================================
+# Variable / Function
+# =============================================================================
 class Variable:
     __array_priority__ = 200
 
@@ -74,40 +80,40 @@ class Variable:
     def cleargrad(self):
         self.grad = None
 
-    def backward(self, retain_grad=False):
+    def backward(self, retain_grad=False, create_graph=False): 
         if self.grad is None:
-            self.grad = np.ones_like(self.data)
+            #self.grad = np.ones_like(self.data)
+            self.grad = Variable(np.ones_like(self.data)) # grad를 Variable 인스턴스로 만들기
 
         funcs = []
         seen_set = set()
-
         def add_func(f):
             if f not in seen_set:
                 funcs.append(f)
                 seen_set.add(f)
-                funcs.sort(key=lambda x: x.generation)
+                funcs.sort(key=lambda x : x.generation)
 
         add_func(self.creator)
-
         while funcs:
             f = funcs.pop()
-            gys = [output().grad for output in f.outputs]  # output is weakref
-            gxs = f.backward(*gys)
-            if not isinstance(gxs, tuple):
-                gxs = (gxs,)
+            gys = [output().grad for output in f.outputs]
 
-            for x, gx in zip(f.inputs, gxs):
-                if x.grad is None:
-                    x.grad = gx
-                else:
-                    x.grad = x.grad + gx
-
-                if x.creator is not None:
-                    add_func(x.creator)
-
+            with using_config('enable_backprop', create_graph): # 역전파 활성/비활성 모드 전환
+                gxs = f.backward(*gys)
+                if not isinstance(gxs, tuple):
+                    gxs = (gxs,)
+            
+                for x, gx in zip(f.inputs, gxs):
+                    if x.grad is None:
+                        x.grad = gx
+                    else:
+                        x.grad = x.grad + gx
+                    if x.creater is not None:
+                        add_func(x.creator)
+            
             if not retain_grad:
                 for y in f.outputs:
-                    y().grad = None  # y is weakref
+                    y().grad = None
 
 
 def as_variable(obj):
@@ -132,13 +138,13 @@ class Function:
             ys = (ys,)
         outputs = [Variable(as_array(y)) for y in ys]
 
-        if Config.enable_backprop:
-            self.generation = max([x.generation for x in inputs])
+        if Config.enable_backprop: # 역전파 활성/비활성 모드 제어 부분
             for output in outputs:
-                output.set_creator(self)
+                output.set_creator(self) # 계산 그래프 연결
             self.inputs = inputs
             self.outputs = [weakref.ref(output) for output in outputs]
-
+            self.generation = max([x.generation for x in inputs])
+        
         return outputs if len(outputs) > 1 else outputs[0]
 
     def forward(self, xs):
@@ -148,6 +154,9 @@ class Function:
         raise NotImplementedError()
 
 
+# =============================================================================
+# 사칙연산 / 연산자 오버로드
+# =============================================================================
 class Add(Function):
     def forward(self, x0, x1):
         y = x0 + x1
@@ -168,7 +177,7 @@ class Mul(Function):
         return y
 
     def backward(self, gy):
-        x0, x1 = self.inputs[0].data, self.inputs[1].data
+        x0, x1 = self.inputs[0], self.inputs[1]
         return gy * x1, gy * x0
 
 
@@ -205,7 +214,7 @@ def sub(x0, x1):
 
 def rsub(x0, x1):
     x1 = as_array(x1)
-    return sub(x1, x0)
+    return Sub()(x1, x0)
 
 
 class Div(Function):
@@ -214,7 +223,7 @@ class Div(Function):
         return y
 
     def backward(self, gy):
-        x0, x1 = self.inputs[0].data, self.inputs[1].data
+        x0, x1 = self.inputs[0], self.inputs[1]
         gx0 = gy / x1
         gx1 = gy * (-x0 / x1 ** 2)
         return gx0, gx1
@@ -227,7 +236,7 @@ def div(x0, x1):
 
 def rdiv(x0, x1):
     x1 = as_array(x1)
-    return div(x1, x0)
+    return Div()(x1, x0)
 
 
 class Pow(Function):
@@ -239,7 +248,7 @@ class Pow(Function):
         return y
 
     def backward(self, gy):
-        x = self.inputs[0].data
+        x = self.inputs[0]
         c = self.c
 
         gx = c * x ** (c - 1) * gy
@@ -248,6 +257,7 @@ class Pow(Function):
 
 def pow(x, c):
     return Pow(c)(x)
+
 
 
 Variable.__add__ = add
@@ -261,43 +271,62 @@ Variable.__truediv__ = div
 Variable.__rtruediv__ = rdiv
 Variable.__pow__ = pow
 
+class Sin(Function):
+    def forward(self, x):
+        y = np.sin(x)
+        return y
 
-def sphere(x, y):
-    z = x ** 2 + y ** 2
-    return z
-
-
-def matyas(x, y):
-    z = 0.26 * (x ** 2 + y ** 2) - 0.48 * x * y
-    return z
-
-
-def goldstein(x, y):
-    z = (1 + (x + y + 1)**2 * (19 - 14*x + 3*x**2 - 14*y + 6*x*y + 3*y**2)) * \
-        (30 + (2*x - 3*y)**2 * (18 - 32*x + 12*x**2 + 48*y - 36*x*y + 27*y**2))
-    return z
-
-def rosenbrock(x0, x1):
-    y = 100 * (x1 - x0 ** 2) ** 2 + (x0 - 1) ** 2
-    return y
+    def backward(self, gy):
+        x, = self.inputs
+        gx = gy * cos(x)
+        return gx
 
 
-x0 = Variable(np.array(0.0))
-x1 = Variable(np.array(2.0))
-lr = 0.001
-iters = 1000
+def sin(x):
+    return Sin()(x)
 
-for i in range(iters):
-    print(x0, x1)
 
-    y = rosenbrock(x0, x1)
+class Cos(Function):
+    def forward(self, x):
+        y = np.cos(x)
+        return y
 
-    x0.cleargrad()
-    x1.cleargrad()
-    y.backward()
+    def backward(self, gy):
+        x, = self.inputs
+        gx = gy * -sin(x)
+        return gx
 
-    x0.data -= lr * x0.grad
-    x1.data -= lr * x1.grad
 
-print(x0.data)
-print(x1.data)
+def cos(x):
+    return Cos()(x)
+
+
+class Tanh(Function):
+    def forward(self, x):
+        y = np.tanh(x)
+        return y
+
+    def backward(self, gy):
+        y = self.outputs[0]()  # weakref
+        gx = gy * (1 - y * y)
+        return gx
+
+
+def tanh(x):
+    return Tanh()(x)
+
+
+x = Variable(np.linspace(-7, 7, 200))
+y = sin(x)
+y.backward(create_graph=True)
+
+logs = [y.data]
+
+for i in range(3):
+    logs.append(x.grad.data)
+    gx = x.grad
+    x.cleargrad()
+    gx.backward(create_graph=True)
+
+gx - x.grad
+print(gx)
