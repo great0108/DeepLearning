@@ -1,11 +1,15 @@
-const {Variable, Operation} = require("./core")
-const {sin, tanh} = require("./functions")
+const {Variable} = require("./core")
+const {} = require("./functions")
 const Arr = require("./Arr")
 
-let x = new Variable(Arr([[1,2,3], [4,5,6]]))
-let c = new Variable(Arr([[10, 20, 30], [40, 50, 60]]))
-
-let y = x.mul(c).div(10)
-y.backward()
+let x = new Variable(Arr([[0,1,2], [3,4,5]]))
+let y = x.reshape(6)
+y.backward(true)
+console.log(y)
 console.log(x.grad)
-console.log(c.grad)
+
+x = new Variable(Arr([[1,2,3], [4,5,6]]))
+y = x.transpose()
+y.backward()
+console.log(y)
+console.log(x.grad)

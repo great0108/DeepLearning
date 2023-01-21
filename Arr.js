@@ -116,8 +116,7 @@ Arr.copy = function(arr) {
 Object.defineProperty(Arr.prototype, "copy", {
     value : function() {
         return Arr.copy(this)
-    },
-    writable : true
+    }
 })
 
 Object.defineProperty(Arr.prototype, "same", {
@@ -131,8 +130,7 @@ Object.defineProperty(Arr.prototype, "same", {
             }
         }
         return true
-    },
-    writable : true
+    }
 })
 
 Object.defineProperty(Arr.prototype, "shape", {
@@ -173,8 +171,7 @@ Object.defineProperty(Arr.prototype, "get", {
             temp = temp[i >= 0 ? i : temp.length + i]
         }
         return temp
-    },
-    writable : true
+    }
 })
 
 
@@ -187,8 +184,7 @@ Object.defineProperty(Arr.prototype, "set", {
             temp = temp[i >= 0 ? i : temp.length + i]
         }
         temp[last >= 0 ? last : temp.length + last] = Array.isArray(value) ? Arr(value) : value
-    },
-    writable : true
+    }
 })
 
 Object.defineProperty(Arr.prototype, "deepFor", {
@@ -207,8 +203,7 @@ Object.defineProperty(Arr.prototype, "deepFor", {
                 this[i].deepFor(fn, index.concat(i), size)
             }
         }
-    },
-    writable : true
+    }
 })
 
 Object.defineProperty(Arr.prototype, "deepMap", {
@@ -230,8 +225,7 @@ Object.defineProperty(Arr.prototype, "deepMap", {
         }
         Object.setPrototypeOf(arr, Arr.prototype)
         return arr
-    },
-    writable : true
+    }
 })
 
 Object.defineProperty(Arr.prototype, "_slice", {
@@ -242,8 +236,7 @@ Object.defineProperty(Arr.prototype, "_slice", {
         }
         Object.setPrototypeOf(arr, Arr.prototype)
         return arr
-    },
-    writable : true
+    }
 })
 
 Object.defineProperty(Arr.prototype, "slice", {
@@ -274,8 +267,7 @@ Object.defineProperty(Arr.prototype, "slice", {
             }
         }
         return arr
-    },
-    writable : true
+    }
 })
 
 Object.defineProperty(Arr.prototype, "overlap", {
@@ -301,8 +293,7 @@ Object.defineProperty(Arr.prototype, "overlap", {
         let shape = start.map((v, i) => end[i] - v)
         value = Arr(value).broadcast(shape)
         value.deepFor((v, i) => this.set(i.map((v2, i2) => v2 + start[i2]), v))
-    },
-    writable : true
+    }
 })
 
 Object.defineProperty(Arr.prototype, "expand", {
@@ -321,8 +312,7 @@ Object.defineProperty(Arr.prototype, "expand", {
             throw new Error("차원이 배열을 벗어났습니다.")
         }
         return Arr.copy(this._expand(axis))
-    },
-    writable : true
+    }
 })
 
 Object.defineProperty(Arr.prototype, "_expand", {
@@ -334,8 +324,7 @@ Object.defineProperty(Arr.prototype, "_expand", {
         } else {
             return this.map(v => v._expand(axis-1))
         }
-    },
-    writable : true
+    }
 })
 
 Object.defineProperty(Arr.prototype, "squeeze", {
@@ -363,8 +352,7 @@ Object.defineProperty(Arr.prototype, "squeeze", {
             throw new Error("배열의 길이가 1이 아니라서 차원을 축소할 수 없습니다.")
         }
         return Arr.copy(this._squeeze(axis))
-    },
-    writable : true
+    }
 })
 
 Object.defineProperty(Arr.prototype, "_squeeze", {
@@ -376,8 +364,7 @@ Object.defineProperty(Arr.prototype, "_squeeze", {
         } else {
             return this.map(v => v._squeeze(axis-1))
         }
-    },
-    writable : true
+    }
 })
 
 Object.defineProperty(Arr.prototype, "broadcast", {
@@ -396,8 +383,7 @@ Object.defineProperty(Arr.prototype, "broadcast", {
             }
         }
         return Arr(deepCopy(Arr.deepArr(temp)._broadcast(shape.reverse())))
-    },
-    writable : true
+    }
 })
 
 Object.defineProperty(Arr.prototype, "_broadcast", {
@@ -415,8 +401,7 @@ Object.defineProperty(Arr.prototype, "_broadcast", {
             arr.push(temp[0])
         }
         return arr
-    },
-    writable : true
+    }
 })
 
 Object.defineProperty(Arr.prototype, "cal", {
@@ -426,57 +411,49 @@ Object.defineProperty(Arr.prototype, "cal", {
         let arr1 = this.broadcast(shape)
         let arr2 = arr.broadcast(shape)
         return arr1.deepMap((v, i) => fn(v, arr2.get(i)))
-    },
-    writable : true
+    }
 })
 
 Object.defineProperty(Arr.prototype, "plus", {
     value : function(arr) {
         return this.cal(arr, (a, b) => a+b)
-    },
-    writable : true
+    }
 })
 
 Object.defineProperty(Arr.prototype, "minus", {
     value : function(arr) {
         return this.cal(arr, (a, b) => a-b)
-    },
-    writable : true
+    }
 })
 
 Object.defineProperty(Arr.prototype, "rminus", {
     value : function(arr) {
         return this.cal(arr, (a, b) => b-a)
-    },
-    writable : true
+    }
 })
 
 Object.defineProperty(Arr.prototype, "mul", {
     value : function(arr) {
         return this.cal(arr, (a, b) => a*b)
-    },
-    writable : true
+    }
 })
 
 Object.defineProperty(Arr.prototype, "div", {
     value : function(arr) {
         return this.cal(arr, (a, b) => a/b)
-    },
-    writable : true
+    }
 })
 
 Object.defineProperty(Arr.prototype, "rdiv", {
     value : function(arr) {
         return this.cal(arr, (a, b) => b/a)
-    },
-    writable : true
+    }
 })
 
 Object.defineProperty(Arr.prototype, "pow", {
     value : function(arr) {
         return this.cal(arr, (a, b) => Math.pow(a, b))
-    },
-    writable : true
+    }
 })
 
 Object.defineProperty(Arr.prototype, "view", {
@@ -507,8 +484,7 @@ Object.defineProperty(Arr.prototype, "_view", {
             }
         }
         return "[" + result + "]"
-    },
-    writable : true
+    }
 })
 
 Object.defineProperty(Arr.prototype, "flat", {
@@ -522,8 +498,7 @@ Object.defineProperty(Arr.prototype, "flat", {
             }
         }
         return Arr.copy(temp)
-    },
-    writable : true
+    }
 })
 
 Object.defineProperty(Arr.prototype, "reshape", {
@@ -551,8 +526,7 @@ Object.defineProperty(Arr.prototype, "reshape", {
             index += 1
         })
         return result
-    },
-    writable : true
+    }
 })
 
 Object.defineProperty(Arr.prototype, "swapaxis", {
@@ -577,8 +551,36 @@ Object.defineProperty(Arr.prototype, "swapaxis", {
             result.set(i, v)
         })
         return result
-    },
-    writable : true
+    }
+})
+
+Object.defineProperty(Arr.prototype, "transpose", {
+    value : function(axis) {
+        if(!axis) {
+            return this.T
+        }
+
+        axis = arguments.length === 1 
+        ? (Array.isArray(axis) ? axis : Array.of(axis)) 
+        : Array.from(arguments)
+
+        let size = this.shape
+        if(axis.length != size.length) {
+            throw new Error("차원 개수가 맞지 않습니다.")
+        }
+
+        for(let i = 0; i < size.length; i++) {
+            if(!axis.includes(i)) {
+                throw new Error("없는 차원이 있습니다.")
+            }
+        }
+
+        let result = this
+        for(let i = 0; i < size.length; i++) {
+            result = result.swapaxis(i, axis[i])
+        }
+        return result
+    }
 })
 
 Object.defineProperty(Arr.prototype, "calaxis", {
@@ -608,29 +610,34 @@ Object.defineProperty(Arr.prototype, "calaxis", {
         }
         Object.setPrototypeOf(arr, Arr.prototype)
         return arr
-    },
-    writable : true
+    }
 })
 
 Object.defineProperty(Arr.prototype, "max", {
-    value : function(axis) {
+    value : function(axis, keepdims) {
+        if(keepdims) {
+            return this.calAxis(axis, v => Arr(Math.max.apply(null, v)))
+        }
         return this.calAxis(axis, v => Math.max.apply(null, v))
-    },
-    writable : true
+    }
 })
 
 Object.defineProperty(Arr.prototype, "min", {
-    value : function(axis) {
+    value : function(axis, keepdims) {
+        if(keepdims) {
+            return this.calAxis(axis, v => Arr(Math.min.apply(null, v)))
+        }
         return this.calAxis(axis, v => Math.min.apply(null, v))
-    },
-    writable : true
+    }
 })
 
 Object.defineProperty(Arr.prototype, "sum", {
-    value : function(axis) {
-        return this.calAxis(axis, v => v.reduce((a, v) => a+v, 0))
-    },
-    writable : true
+    value : function(axis, keepdims) {
+        if(keepdims) {
+            return this.calAxis(axis, v => Arr(v.reduce((a, b) => a+b, 0)))
+        }
+        return this.calAxis(axis, v => v.reduce((a, b) => a+b, 0))
+    }
 })
 
 Object.defineProperty(Arr.prototype, "T", {
@@ -644,8 +651,7 @@ Object.defineProperty(Arr.prototype, "T", {
             temp = temp.swapaxis(i, ndim-i-1)
         }
         return temp
-    },
-    writable : true
+    }
 })
 
 Object.defineProperty(Arr.prototype, "flip", {
@@ -669,8 +675,7 @@ Object.defineProperty(Arr.prototype, "flip", {
         arr = arr.deepMap((v, i) => this.get(i)._flip())
         return arr
 
-    },
-    writable : true
+    }
 })
 
 Object.defineProperty(Arr.prototype, "_flip", {
@@ -681,8 +686,7 @@ Object.defineProperty(Arr.prototype, "_flip", {
             result.push(this[len-i-1])
         }
         return result
-    },
-    writable : true
+    }
 })
 
 Object.defineProperty(Arr.prototype, "select", {
@@ -706,8 +710,7 @@ Object.defineProperty(Arr.prototype, "select", {
             return this.get(i)
         })
         return arr
-    },
-    writable : true
+    }
 })
 
 
@@ -739,8 +742,7 @@ Object.defineProperty(Arr.prototype, "map", {
         let arr = Array.prototype.map.call(this, fn, thisarg)
         Object.setPrototypeOf(arr, Arr.prototype)
         return arr
-    },
-    writable : true
+    }
 })
 
 Object.defineProperty(Arr.prototype, "filter", {
@@ -748,8 +750,7 @@ Object.defineProperty(Arr.prototype, "filter", {
         let arr = Array.prototype.filter.call(this, fn, thisarg)
         Object.setPrototypeOf(arr, Arr.prototype)
         return arr
-    },
-    writable : true
+    }
 })
 
 Object.defineProperty(Arr.prototype, "splice", {
@@ -761,8 +762,7 @@ Object.defineProperty(Arr.prototype, "splice", {
         let arr = Array.prototype.splice.apply(this, temp)
         Object.setPrototypeOf(arr, Arr.prototype)
         return arr
-    },
-    writable : true
+    }
 })
 
 // let a = Arr.range(9).reshape(3,3)

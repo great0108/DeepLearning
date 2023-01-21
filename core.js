@@ -73,7 +73,7 @@
             get() {return this.data.length}
         },
         view : {
-            get() {return this.data.view()}
+            get() {return this.data.view}
         }
     })
 
@@ -281,6 +281,52 @@
     }
 
 
+    function Reshape(shape) {
+        let result = Operation.inherit(Reshape)
+        result.shape = shape
+        return result
+    }
+
+    Reshape.prototype.__proto__ = Operation.prototype
+
+    Reshape.prototype.forward = function(x) {
+        this.x_shape = x.shape
+        let y = x.reshape(this.shape)
+        return y
+    }
+
+    Reshape.prototype.backward = function(gy) {
+        return reshape(gy, this.x_shape)
+    }
+
+
+    function Transpose(axes) {
+        let result = Operation.inherit(Transpose)
+        result.axes = axes === undefined ? null : axes
+        return result
+    }
+
+    Transpose.prototype.__proto__ = Operation.prototype
+
+    Transpose.prototype.forward = function(x) {
+        let y = x.transpose(this.axes)
+        return y
+    }
+
+    Transpose.prototype.backward = function(gy) {
+        if(this.axes === null) {
+            return transpose(gy)
+        }
+
+        let axes_len = this.axes.length
+        let inv_axes = []
+        for(let i = 0; i < axes_len; i++) {
+            inv_axes.push(this.axes.indexOf(i))
+        }
+        return transpose(gy, inv_axes)
+    }
+
+
     function add(x0, x1) {
         x1 = as_array(x1)
         return Add()(x0, x1)
@@ -319,6 +365,18 @@
         return Pow(c)(x)
     }
 
+    function reshape(x, shape) {
+        if(x.shape == shape) {
+            return as_variable(x)
+        }
+        return Reshape(shape)(x)
+    }
+
+    function transpose(x, axes) {
+        return Transpose(axes)(x)
+    }
+
+
     Variable.prototype.plus = function(x) {return add(this, x)}
     Variable.prototype.mul = function(x) {return mul(this, x)}
     Variable.prototype.neg = function() {return neg(this)}
@@ -327,6 +385,22 @@
     Variable.prototype.div = function(x) {return div(this, x)}
     Variable.prototype.rdiv = function(x) {return rdiv(this, x)}
     Variable.prototype.pow = function(c) {return pow(this, c)}
+    
+    Variable.prototype.reshape = function(shape) {
+        shape = arguments.length === 1 
+        ? (Array.isArray(shape) ? size : Array.of(shape)) 
+        : Array.from(arguments)
+        return reshape(this, shape)
+    }
+
+    Variable.prototype.transpose = function(axes) {
+        if(axes !== undefined) {
+            axes = arguments.length === 1
+            ? (Array.isArray(axes) ? axes : Array.of(axes))
+            : Array.from(arguments)
+        }
+        return transpose(this, axes)
+    }
 
     module.exports = {
         Variable : Variable,

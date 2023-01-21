@@ -2,6 +2,7 @@
     "use strict"
     const Arr = require("./Arr")
     const {Operation, Variable, as_variable, as_array} = require("./core")
+    const {reshape_sum_backward} = require("./utils")
 
     function Sin() {
         return Operation.inherit(Sin)
@@ -93,38 +94,6 @@
     }
 
 
-    function Reshape(shape) {
-        let result = Operation.inherit(Reshape)
-        result.shape = shape
-        return result
-    }
-
-    Reshape.prototype.__proto__ = Operation.prototype
-
-    Reshape.prototype.forward = function(x) {
-        this.x_shape = x.shape
-        let y = x.reshape(this.shape)
-        return y
-    }
-
-    Reshape.prototype.backward = function(gy) {
-        return reshape(gy, this.x_shape)
-    }
-
-
-    function Transpose(axes) {
-        let result = Operation.inherit(Transpose)
-        result.axes = axes
-        return result
-    }
-
-    Transpose.prototype.__proto__ = Operation.prototype
-
-    Transpose.prototype.forward = function(x) {
-        let y = x.a
-    }
-
-
     function Sum(axis, keepdims) {
         let result = Operation.inherit(Sum)
         result.axis = axis
@@ -136,8 +105,31 @@
 
     Sum.prototype.forward = function(x) {
         this.x_shape = x.shape
-        let y = x.sum(axis=this.axis, keepdims=this.keepdims)
+        let y = x.sum(this.axis, this.keepdims)
         return y
+    }
+
+    Sum.prototype.backward = function(gy) {
+        gy = reshape_sum_backward(gy, this.x_shape, this.axis, this.keepdims)
+        let gx = broadcast_to(gy, this.x_shape)
+        return gx
+    }
+
+
+    function BroadcastTo(shape) {
+        let result = Operation.inherit(BroadcastTo)
+        result.shape = shape
+        return result
+    }
+
+    BroadcastTo.prototype.__proto__ = Operation.prototype
+
+    BroadcastTo.prototype.forward = function(x) {
+
+    }
+
+    BroadcastTo.prototype.backward = function(gy) {
+        
     }
 
 
@@ -161,11 +153,10 @@
         return Log()(x)
     }
 
-    function reshape(x, shape) {
-        if(x.shape == shape) {
-            return as_variable(x)
-        }
-        return Reshape(shape)(x)
+    function sum(x, axis, keepdims) {
+        axis = axis === undefined ? null : axis
+        keepdims = keepdims === undefined ? null : keepdims
+        return Sum(axis, keepdims)(x)
     }
 
 
