@@ -74,6 +74,9 @@
         },
         view : {
             get() {return this.data.view}
+        },
+        T : {
+            get() {return transpose(this)}
         }
     })
 
@@ -140,7 +143,23 @@
         this.data = this.data.deepMap(fn)
     }
 
+    Variable.prototype.reshape = function(shape) {
+        shape = arguments.length === 1 
+        ? (Array.isArray(shape) ? size : Array.of(shape)) 
+        : Array.from(arguments)
+        return reshape(this, shape)
+    }
 
+    Variable.prototype.transpose = function(axes) {
+        if(axes !== undefined) {
+            axes = arguments.length === 1
+            ? (Array.isArray(axes) ? axes : Array.of(axes))
+            : Array.from(arguments)
+        }
+        return transpose(this, axes)
+    }
+
+    
     function Operation() {
         return Callable.inherit(Operation)
     }
@@ -327,6 +346,68 @@
     }
 
 
+    function Sum(axis, keepdims) {
+        let result = Operation.inherit(Sum)
+        result.axis = axis
+        result.keepdims = keepdims
+        return result
+    }
+
+    Sum.prototype.__proto__ = Operation.prototype
+
+    Sum.prototype.forward = function(x) {
+        this.x_shape = x.shape
+        let y = x.sum(this.axis, this.keepdims)
+        return y
+    }
+
+    Sum.prototype.backward = function(gy) {
+        gy = reshape_sum_backward(gy, this.x_shape, this.axis, this.keepdims)
+        let gx = broadcast_to(gy, this.x_shape)
+        return gx
+    }
+
+
+    function SumTo(shape) {
+        let result = Operation.inherit(SumTo)
+        result.shape = shape
+        return result
+    }
+
+    SumTo.prototype.__proto__ = Operation.prototype
+
+    SumTo.prototype.forward = function(x) {
+        this.x_shape = x.shape
+        let y = utils.sum_to(x, this.shape)
+        return y
+    }
+
+    SumTo.prototype.backward = function(gy) {
+        let gx = broadcast_to(gy, this.x_shape)
+        return gx
+    }
+
+
+    function BroadcastTo() {
+        let result = Operation.inherit(BroadcastTo)
+        result.shape = shape
+        return result
+    }
+
+    BroadcastTo.prototype.__proto__ = Operation.prototype
+
+    BroadcastTo.prototype.forward = function(x) {
+        this.x_shape = x.shape
+        let y = x.broadcast(this.shape)
+        return y
+    }
+
+    BroadcastTo.prototype.backward = function(gy) {
+        let gx = sum_to(gy, this.x_shape)
+        return gx
+    }
+
+
     function add(x0, x1) {
         x1 = as_array(x1)
         return Add()(x0, x1)
@@ -366,7 +447,7 @@
     }
 
     function reshape(x, shape) {
-        if(x.shape == shape) {
+        if(x.shape.same(shape)) {
             return as_variable(x)
         }
         return Reshape(shape)(x)
@@ -376,6 +457,25 @@
         return Transpose(axes)(x)
     }
 
+    function sum(x, axis, keepdims) {
+        axis = axis === undefined ? null : axis
+        keepdims = keepdims === undefined ? false : keepdims
+        return Sum(axis, keepdims)(x)
+    }
+
+    function sum_to(x, shape) {
+        if(x.shape.same(shape)) {
+            return as_variable(x)
+        }
+        return SumTo(shape)(x)
+    }
+
+    function broadcast_to(x, shape) {
+        if(x.shape.same(shape)) {
+            return as_variable(x)
+        }
+        return BroadcastTo(shape)(x)
+    }
 
     Variable.prototype.plus = function(x) {return add(this, x)}
     Variable.prototype.mul = function(x) {return mul(this, x)}
@@ -385,22 +485,6 @@
     Variable.prototype.div = function(x) {return div(this, x)}
     Variable.prototype.rdiv = function(x) {return rdiv(this, x)}
     Variable.prototype.pow = function(c) {return pow(this, c)}
-    
-    Variable.prototype.reshape = function(shape) {
-        shape = arguments.length === 1 
-        ? (Array.isArray(shape) ? size : Array.of(shape)) 
-        : Array.from(arguments)
-        return reshape(this, shape)
-    }
-
-    Variable.prototype.transpose = function(axes) {
-        if(axes !== undefined) {
-            axes = arguments.length === 1
-            ? (Array.isArray(axes) ? axes : Array.of(axes))
-            : Array.from(arguments)
-        }
-        return transpose(this, axes)
-    }
 
     module.exports = {
         Variable : Variable,

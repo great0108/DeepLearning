@@ -658,7 +658,7 @@ Object.defineProperty(Arr.prototype, "flip", {
     value : function(axis) {
         if(Array.isArray(axis)) {
             let temp = this
-            for(a of axis) {
+            for(let a of axis) {
                 temp = temp.flip(a)
             }
             return temp

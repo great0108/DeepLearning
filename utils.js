@@ -21,6 +21,14 @@
         return gy
     }
 
+    function sum_to(x, shape) {
+        let ndim = shape.length
+        let lead = x.ndim - ndim
+        let lead_axis = Arr.range(lead)
+
+        let axis = []
+    }
+
     module.exports = {
         reshape_sum_backward : reshape_sum_backward
     }

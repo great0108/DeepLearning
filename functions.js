@@ -94,45 +94,6 @@
     }
 
 
-    function Sum(axis, keepdims) {
-        let result = Operation.inherit(Sum)
-        result.axis = axis
-        result.keepdims = keepdims
-        return result
-    }
-
-    Sum.prototype.__proto__ = Operation.prototype
-
-    Sum.prototype.forward = function(x) {
-        this.x_shape = x.shape
-        let y = x.sum(this.axis, this.keepdims)
-        return y
-    }
-
-    Sum.prototype.backward = function(gy) {
-        gy = reshape_sum_backward(gy, this.x_shape, this.axis, this.keepdims)
-        let gx = broadcast_to(gy, this.x_shape)
-        return gx
-    }
-
-
-    function BroadcastTo(shape) {
-        let result = Operation.inherit(BroadcastTo)
-        result.shape = shape
-        return result
-    }
-
-    BroadcastTo.prototype.__proto__ = Operation.prototype
-
-    BroadcastTo.prototype.forward = function(x) {
-
-    }
-
-    BroadcastTo.prototype.backward = function(gy) {
-        
-    }
-
-
     function sin(x) {
         return Sin()(x)
     }
@@ -151,12 +112,6 @@
 
     function log(x) {
         return Log()(x)
-    }
-
-    function sum(x, axis, keepdims) {
-        axis = axis === undefined ? null : axis
-        keepdims = keepdims === undefined ? null : keepdims
-        return Sum(axis, keepdims)(x)
     }
 
 

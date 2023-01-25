@@ -315,7 +315,29 @@ class Tanh(Function):
 def tanh(x):
     return Tanh()(x)
 
-axes = [2,0,1]
-axes_len = len(axes)
-a = np.argsort([ax % axes_len for ax in axes])
-print(a)
+def sum_to(x, shape):
+    """Sum elements along axes to output an array of a given shape.
+    Args:
+        x (ndarray): Input array.
+        shape:
+    Returns:
+        ndarray: Output array of the shape.
+    """
+    ndim = len(shape)
+    lead = x.ndim - ndim
+    lead_axis = tuple(range(lead))
+    print(ndim, lead, lead_axis)
+
+    axis = tuple([i + lead for i, sx in enumerate(shape) if sx == 1])
+    print(axis)
+    y = x.sum(lead_axis + axis, keepdims=True)
+    if lead > 0:
+        y = y.squeeze(lead_axis)
+    return y
+
+
+a = np.array([[1,2,3], [3,4,5]])
+# print(sum_to(a, [3]))
+
+x = np.array([[[0], [1], [2]]])
+print(x.squeeze((0,2)))
