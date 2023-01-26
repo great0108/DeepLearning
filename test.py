@@ -336,8 +336,6 @@ def sum_to(x, shape):
     return y
 
 
-a = np.array([[1,2,3], [3,4,5]])
-# print(sum_to(a, [3]))
 
-x = np.array([[[0], [1], [2]]])
-print(x.squeeze((0,2)))
+a = np.array([[1,2,3], [3,4,5]])
+print(a.sum(keepdims=True))

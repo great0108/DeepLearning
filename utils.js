@@ -10,9 +10,9 @@
         }
 
         let shape = gy.shape
-        if(!(ndim === 0 || array_axis !== null || keepdims)) {
+        if(!(ndim === 0 || array_axis === null || keepdims)) {
             let actual_axis = array_axis.map(a => a >= 0 ? a : a + ndim)
-            for(a of actual_axis.sort()) {
+            for(let a of actual_axis.sort((a, b) => a-b)) {
                 shape.splice(a, 0, 1)
             }
         }
@@ -27,9 +27,21 @@
         let lead_axis = Arr.range(lead)
 
         let axis = []
+        for(let i = 0; i < ndim; i++) {
+            if(shape[i] === 1) {
+                axis.push(i)
+            }
+        }
+
+        let y = x.sum(lead_axis.concat(axis), true)
+        if(lead > 0) {
+            y = y.squeeze(lead_axis)
+        }
+        return y
     }
 
     module.exports = {
-        reshape_sum_backward : reshape_sum_backward
+        reshape_sum_backward : reshape_sum_backward,
+        sum_to : sum_to
     }
-})
+})()

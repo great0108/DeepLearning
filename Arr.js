@@ -94,19 +94,12 @@ Arr.calShape = function(arr1, arr2) {
 }
 
 Arr.deepArr = function(arr) {
-    if(!Array.isArray(arr)) {
-        return arr
+    if(Array.isArray(arr)) {
+        let result = arr.map(v => Arr.deepArr(v))
+        Object.setPrototypeOf(result, Arr.prototype)
+        return result
     }
-    let result = []
-    for(let i = 0; i < arr.length; i++) {
-        if(Array.isArray(arr[i])) {
-            result.push(Arr.deepArr(arr[i]))
-        } else {
-            result.push(arr[i])
-        }
-    }
-    Object.setPrototypeOf(result, Arr.prototype)
-    return result
+    return arr
 }
 
 Arr.copy = function(arr) {
@@ -301,7 +294,7 @@ Object.defineProperty(Arr.prototype, "expand", {
         axis = arguments.length === 1 ? axis : Array.from(arguments)
         if(Array.isArray(axis)) {
             let temp = this
-            for(let a of axis) {
+            for(let a of axis.sort((a, b) => a - b)) {
                 temp = temp.expand(a)
             }
             return temp
@@ -339,7 +332,7 @@ Object.defineProperty(Arr.prototype, "squeeze", {
         axis = arguments.length === 1 ? axis : Array.from(arguments)
         if(Array.isArray(axis)) {
             let temp = this
-            for(let a of axis) {
+            for(let a of axis.sort((a, b) => b - a)) {
                 temp = temp.squeeze(a)
             }
             return temp
@@ -605,7 +598,7 @@ Object.defineProperty(Arr.prototype, "calaxis", {
             return fn(arr, index.slice(0))
         } else {
             for(let i = 0; i < size[index.length]; i++) {
-                arr.push(this.calAxis(axis, fn, index.concat(i), size, len))
+                arr.push(this.calaxis(axis, fn, index.concat(i), size, len))
             }
         }
         Object.setPrototypeOf(arr, Arr.prototype)
@@ -616,27 +609,35 @@ Object.defineProperty(Arr.prototype, "calaxis", {
 Object.defineProperty(Arr.prototype, "max", {
     value : function(axis, keepdims) {
         if(keepdims) {
-            return this.calAxis(axis, v => Arr(Math.max.apply(null, v)))
+            return this.calaxis(axis, v => Arr([Math.max.apply(null, v)]))
         }
-        return this.calAxis(axis, v => Math.max.apply(null, v))
+        return this.calaxis(axis, v => Math.max.apply(null, v))
     }
 })
 
 Object.defineProperty(Arr.prototype, "min", {
     value : function(axis, keepdims) {
         if(keepdims) {
-            return this.calAxis(axis, v => Arr(Math.min.apply(null, v)))
+            return this.calaxis(axis, v => Arr([Math.min.apply(null, v)]))
         }
-        return this.calAxis(axis, v => Math.min.apply(null, v))
+        return this.calaxis(axis, v => Math.min.apply(null, v))
     }
 })
 
 Object.defineProperty(Arr.prototype, "sum", {
     value : function(axis, keepdims) {
-        if(keepdims) {
-            return this.calAxis(axis, v => Arr(v.reduce((a, b) => a+b, 0)))
+        if(axis === undefined || axis === null) {
+            let ndim = this.ndim
+            let result = this.flat().reduce((a, b) => a+b, 0)
+            for(let i = 0; i < ndim; i++) {
+                result = [result]
+            }
+            return Arr.deepArr(result)
         }
-        return this.calAxis(axis, v => v.reduce((a, b) => a+b, 0))
+        if(keepdims) {
+            return this.calaxis(axis, v => Arr([v.reduce((a, b) => a+b, 0)]))
+        }
+        return this.calaxis(axis, v => v.reduce((a, b) => a+b, 0))
     }
 })
 

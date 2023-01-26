@@ -2,6 +2,7 @@
     "use strict"
     const Arr = require("./Arr")
     const Callable = require("./Callable")
+    const utils = require("./utils")
 
     function List() {
         let arr = Array.from(arguments)
@@ -145,7 +146,7 @@
 
     Variable.prototype.reshape = function(shape) {
         shape = arguments.length === 1 
-        ? (Array.isArray(shape) ? size : Array.of(shape)) 
+        ? (Array.isArray(shape) ? shape : Array.of(shape)) 
         : Array.from(arguments)
         return reshape(this, shape)
     }
@@ -362,7 +363,7 @@
     }
 
     Sum.prototype.backward = function(gy) {
-        gy = reshape_sum_backward(gy, this.x_shape, this.axis, this.keepdims)
+        gy = utils.reshape_sum_backward(gy, this.x_shape, this.axis, this.keepdims)
         let gx = broadcast_to(gy, this.x_shape)
         return gx
     }
@@ -388,7 +389,7 @@
     }
 
 
-    function BroadcastTo() {
+    function BroadcastTo(shape) {
         let result = Operation.inherit(BroadcastTo)
         result.shape = shape
         return result
@@ -491,6 +492,7 @@
         Operation : Operation,
         as_array : as_array,
         as_variable : as_variable,
-        no_grad : no_grad
+        no_grad : no_grad,
+        sum : sum
     }
 })()
