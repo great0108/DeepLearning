@@ -629,8 +629,10 @@ Object.defineProperty(Arr.prototype, "sum", {
         if(axis === undefined || axis === null) {
             let ndim = this.ndim
             let result = this.flat().reduce((a, b) => a+b, 0)
-            for(let i = 0; i < ndim; i++) {
-                result = [result]
+            if(keepdims) {
+                for(let i = 0; i < ndim; i++) {
+                    result = [result]
+                }
             }
             return Arr.deepArr(result)
         }
