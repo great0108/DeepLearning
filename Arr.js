@@ -714,6 +714,30 @@ Object.defineProperty(Arr.prototype, "select", {
     }
 })
 
+Object.defineProperty(Arr.prototype, "matmul", {
+    value : function(arr) {
+        let shape1 = this.shape
+        let shape2 = arr.shape
+        if(shape1.length !== 2 || shape2.length !== 2) {
+            throw new Error("2차원 배열이 아닙니다.")
+        } else if(shape1[1] !== shape2[0]) {
+            throw new Error("행과 열의 길이가 달라 계산할 수 없습니다.")
+        }
+
+        let result = Arr.zeros([shape1[0], shape2[1]])
+        let temp = null
+        for(let k = 0; k < shape1[1]; k++) {
+            for(let i = 0; i < shape1[0]; i++) {
+                temp = this[i][k]
+                for(let j = 0; j < shape2[1]; j++) {
+                    result[i][j] += arr[k][j] * temp
+                }
+            }
+        }
+        return result
+    }
+})
+
 
 // Arr.prototype.choose = function(index, axis) {
 //     axis = axis === undefined ? 0 : axis

@@ -160,6 +160,10 @@
         return transpose(this, axes)
     }
 
+    Variable.prototype.sum = function(axis, keepdims) {
+        return sum(this, axis, keepdims)
+    }
+
     
     function Operation() {
         return Callable.inherit(Operation)
@@ -201,12 +205,19 @@
     Add.prototype.__proto__ = Operation.prototype
 
     Add.prototype.forward = function(x0, x1) {
+        this.x0_shape = x0.shape
+        this.x1_shape = x1.shape
         let y = x0.plus(x1)
         return y
     }
 
     Add.prototype.backward = function(gy) {
-        return List(gy, gy)
+        let gx0 = gy, gx1 = gy
+        if(!this.x0_shape.same(this.x1_shape)) {
+            gx0 = sum_to(gx0, this.x0_shape)
+            gx1 = sum_to(gx1, this.x1_shape)
+        }
+        return List(gx0, gx1)
     }
 
 
@@ -222,9 +233,13 @@
     }
 
     Mul.prototype.backward = function(gy) {
-        let x0 = this.inputs[0]
-        let x1 = this.inputs[1]
-        return List(x1.mul(gy), x0.mul(gy))
+        let gx0 = this.inputs[0].mul(gy)
+        let gx1 = this.inputs[1].mul(gy)
+        if(!x0.shape.same(x1.shape)) {
+            gx0 = sum_to(gx0, x0.shape)
+            gx1 = sum_to(gx1, x1.shape)
+        }
+        return List(gx0, gx1)
     }
 
 
@@ -250,12 +265,20 @@
     Sub.prototype.__proto__ = Operation.prototype
 
     Sub.prototype.forward = function(x0, x1) {
+        this.x0_shape = x0.shape
+        this.x1_shape = x1.shape
         let y = x0.minus(x1)
         return y
     }
 
     Sub.prototype.backward = function(gy) {
-        return List(gy, gy.mul(-1))
+        let gx0 = gy
+        let gx1 = gy.mul(-1)
+        if(!this.x0_shape.same(this.x1_shape)) {
+            gx0 = sum_to(gx0, this.x0_shape)
+            gx1 = sum_to(gx1, this.x1_shape)
+        }
+        return List(gx0, gx1)
     }
 
 
@@ -275,6 +298,10 @@
         let x1 = this.inputs[1]
         let gx0 = gy.div(x1)
         let gx1 = gy.mul(x0.mul(-1).div(x1.pow(2)))
+        if(!x0.shape.same(x1.shape)) {
+            gx0 = sum_to(gx0, x0.shape)
+            gx1 = sum_to(gx1, x1.shape)
+        }
         return List(gx0, gx1)
     }
 

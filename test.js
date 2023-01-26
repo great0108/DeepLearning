@@ -3,8 +3,11 @@ const {} = require("./functions")
 const Arr = require("./Arr")
 
 
-let x = new Variable(Arr([[1,2,3],[4,5,6]]))
-let y = sum(x, null, true)
-y.backward()
+let x0 = new Variable(Arr([1,2,3]))
+let x1 = new Variable(Arr(10))
+let y = x0.plus(x1)
 console.log(y)
-console.log(x.grad)
+
+y.backward()
+console.log(x0.grad)
+console.log(x1.grad)
