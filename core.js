@@ -517,6 +517,7 @@
     module.exports = {
         Variable : Variable,
         Operation : Operation,
+        List : List,
         as_array : as_array,
         as_variable : as_variable,
         no_grad : no_grad,

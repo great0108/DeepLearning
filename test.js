@@ -1,13 +1,12 @@
 const {Variable, sum} = require("./core")
-const {} = require("./functions")
+const {matmul} = require("./functions")
 const Arr = require("./Arr")
 
 
-let x0 = new Variable(Arr([1,2,3]))
-let x1 = new Variable(Arr(10))
-let y = x0.plus(x1)
-console.log(y)
-
+let x = new Variable(Arr.range(6).reshape(2, 3))
+let w = new Variable(Arr.range(12).reshape(3, 4))
+let y = matmul(x, w)
 y.backward()
-console.log(x0.grad)
-console.log(x1.grad)
+
+console.log(x.grad)
+console.log(w.grad)

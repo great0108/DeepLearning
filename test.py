@@ -64,6 +64,10 @@ class Variable:
     def dtype(self):
         return self.data.dtype
 
+    @property
+    def T(self):
+        return self.data.T
+
     def __len__(self):
         return len(self.data)
 
@@ -335,7 +339,24 @@ def sum_to(x, shape):
         y = y.squeeze(lead_axis)
     return y
 
+class MatMul(Function):
+    def forward(self, x, W):
+        y = x.dot(W)
+        return y
 
+    def backward(self, gy):
+        x, W = self.inputs
+        gx = matmul(gy, W.T)
+        gW = matmul(x.T, gy)
+        return gx, gW
 
-a = np.array([[1,2,3], [3,4,5]])
-print(a.sum(keepdims=True))
+def matmul(x, W):
+    return MatMul()(x, W)
+
+x = Variable(np.arange(6).reshape(2, 3))
+w = Variable(np.arange(12).reshape(3, 4))
+y = matmul(x, w)
+y.backward()
+
+print(x.grad)
+print(w.grad)

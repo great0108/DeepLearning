@@ -1,8 +1,7 @@
 (function() {
     "use strict"
     const Arr = require("./Arr")
-    const {Operation, Variable, as_variable, as_array} = require("./core")
-    const {reshape_sum_backward} = require("./utils")
+    const {Operation, Variable, List, as_variable, as_array} = require("./core")
 
     function Sin() {
         return Operation.inherit(Sin)
@@ -94,6 +93,26 @@
     }
 
 
+    function MatMul() {
+        return Operation.inherit(MatMul)
+    }
+
+    MatMul.prototype.__proto__ = Operation.prototype
+
+    MatMul.prototype.forward = function(x, W) {
+        let y = x.matmul(W)
+        return y
+    }
+
+    MatMul.prototype.backward = function(gy) {
+        let x = this.inputs[0]
+        let W = this.inputs[1]
+        let gx = matmul(gy, W.T)
+        let gW = matmul(x.T, gy)
+        return List(gx, gW)
+    }
+
+
     function sin(x) {
         return Sin()(x)
     }
@@ -114,12 +133,17 @@
         return Log()(x)
     }
 
+    function matmul(x, W) {
+        return MatMul()(x, W)
+    }
+
 
     module.exports = {
         sin : sin,
         cos : cos,
         tanh : tanh,
         exp : exp,
-        log : log
+        log : log,
+        matmul : matmul
     }
 })()
