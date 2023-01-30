@@ -53,6 +53,11 @@ Arr.zeros = function(size) {
     return Arr.fill(size, 0)
 }
 
+Arr.rand = function(size) {
+    size = arguments.length > 1 ? Array.from(arguments) : size
+    return Arr.fill(size, 0).deepMap(v => Math.random())
+}
+
 Arr.range = function(start, end, step) {
     if(step === 0) {
         throw new Error("간격은 0이 될 수 없습니다.")
@@ -608,19 +613,21 @@ Object.defineProperty(Arr.prototype, "calaxis", {
 
 Object.defineProperty(Arr.prototype, "max", {
     value : function(axis, keepdims) {
+        let result = this.calaxis(axis, v => Math.max.apply(null, v))
         if(keepdims) {
-            return this.calaxis(axis, v => Arr([Math.max.apply(null, v)]))
+            result = result.expand(axis)
         }
-        return this.calaxis(axis, v => Math.max.apply(null, v))
+        return result
     }
 })
 
 Object.defineProperty(Arr.prototype, "min", {
     value : function(axis, keepdims) {
+        let result = this.calaxis(axis, v => Math.min.apply(null, v))
         if(keepdims) {
-            return this.calaxis(axis, v => Arr([Math.min.apply(null, v)]))
+            result = result.expand(axis)
         }
-        return this.calaxis(axis, v => Math.min.apply(null, v))
+        return result
     }
 })
 
@@ -636,10 +643,20 @@ Object.defineProperty(Arr.prototype, "sum", {
             }
             return Arr.deepArr(result)
         }
-        if(keepdims) {
-            return this.calaxis(axis, v => Arr([v.reduce((a, b) => a+b, 0)]))
+
+        if(Array.isArray(axis)) {
+            let result = this
+            for(let a of axis.sort((a, b) => b-a)) {
+                result = this.sum(a, keepdims)
+            }
+            return result
         }
-        return this.calaxis(axis, v => v.reduce((a, b) => a+b, 0))
+
+        let result = this.calaxis(axis, v => v.reduce((a, b) => a+b, 0))
+        if(keepdims) {
+            result = result.expand(axis)
+        }
+        return result
     }
 })
 

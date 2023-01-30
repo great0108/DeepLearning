@@ -1,38 +1,43 @@
-const {Variable, sum} = require("./core")
-const {matmul} = require("./functions")
+const {Variable} = require("./core")
+const {sigmoid, mean_squared_error} = require("./functions")
+const {Layer, Linear} = require("./layers")
 const Arr = require("./Arr")
 
-let x = Arr.zeros(100, 1).deepMap(v => Math.random())
-let y = x.mul(2).plus(5).deepMap(v => v + Math.random())
+let x = Arr.rand(100, 1)
+let y = x.deepMap(v => Math.sin(2 * Math.PI * v) + Math.random())
 
-x = new Variable(x)
-y = new Variable(y)
+function TwoLayerNet(hidden_size, out_size) {
+    let result = Layer.inherit(TwoLayerNet)
+    result.layer1 = Linear(hidden_size)
+    result.layer2 = Linear(out_size)
+    return result
+}
 
-let W = new Variable(Arr.zeros(1, 1))
-let b = new Variable(Arr.zeros(1))
+TwoLayerNet.prototype.__proto__ = Layer.prototype
 
-function predict(x) {
-    let y = matmul(x, W).plus(b)
+TwoLayerNet.prototype.forward = function(x) {
+    let y = this.layer1(x)
+    y = sigmoid(y)
+    y = this.layer2(y)
     return y
 }
 
-function mean_squared_error(x0, x1) {
-    let diff = x0.minus(x1)
-    return sum(diff.pow(2)).div(diff.length)
-}
-
-let lr = 0.1
-let iters = 30
+let model = TwoLayerNet(10, 1)
+let lr = 0.2
+let iters = 1000
 
 for(let i = 0; i < iters; i++) {
-    let y_pred = predict(x)
+    let y_pred = model(x)
     let loss = mean_squared_error(y, y_pred)
 
-    W.cleargrad()
-    b.cleargrad()
+    model.cleargrads()
     loss.backward()
 
-    W.data = W.data.minus(W.grad.data.mul(lr))
-    b.data = b.data.minus(b.grad.data.mul(lr))
-    console.log(W.view, b.view, loss.view)
+    for(let param of model.params()) {
+        param.data = param.data.minus(param.grad.data.mul(lr))
+    }
+
+    if((i+1) % 100 === 0) {
+        console.log(loss.view)
+    }
 }

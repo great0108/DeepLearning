@@ -1,7 +1,7 @@
 (function() {
     "use strict"
     const Arr = require("./Arr")
-    const {Operation, Variable, List, as_variable, as_array} = require("./core")
+    const {Operation, Variable, List, sum_to} = require("./core")
 
     function Sin() {
         return Operation.inherit(Sin)
@@ -113,6 +113,69 @@
     }
 
 
+    function Linear() {
+        return Operation.inherit(Linear)
+    }
+
+    Linear.prototype.__proto__ = Operation.prototype
+
+    Linear.prototype.forward = function(x, W, b) {
+        let y = x.matmul(W)
+        if(b != null) {
+            y = y.plus(b)
+        }
+        return y
+    }
+
+    Linear.prototype.backward = function(gy) {
+        let [x, W, b] = this.inputs
+        let gb = b.data != null ? sum_to(gy, b.shape) : null
+        let gx = matmul(gy, W.T)
+        let gW = matmul(x.T, gy)
+        return List(gx, gW, gb)
+    }
+
+
+    function Sigmoid() {
+        return Operation.inherit(Sigmoid)
+    }
+
+    Sigmoid.prototype.__proto__ = Operation.prototype
+
+    Sigmoid.prototype.forward = function(x) {
+        let y = x.mul(0.5).deepMap(v => Math.tanh(v)).mul(0.5).plus(0.5)
+        return y
+    }
+
+    Sigmoid.prototype.backward = function(gy) {
+        let y = this.outputs[0]
+        let gx = gy.mul(y).mul(y.rminus(1))
+        return gx
+    }
+
+
+    function MeanSquaredError() {
+        return Operation.inherit(MeanSquaredError)
+    }
+
+    MeanSquaredError.prototype.__proto__ = Operation.prototype
+
+    MeanSquaredError.prototype.forward = function(x0, x1) {
+        let diff = x0.minus(x1)
+        let y = diff.pow(2).sum() / diff.length
+        return y
+    }
+
+    MeanSquaredError.prototype.backward = function(gy) {
+        let x0 = this.inputs[0]
+        let x1 = this.inputs[1]
+        let diff = x0.minus(x1)
+        let gx0 = gy.mul(diff).mul(2 / diff.length)
+        let gx1 = gx0.mul(-1)
+        return List(gx0, gx1)
+    }
+
+
     function sin(x) {
         return Sin()(x)
     }
@@ -137,6 +200,19 @@
         return MatMul()(x, W)
     }
 
+    function linear(x, W, b) {
+        b = b === undefined ? null : b
+        return Linear()(x, W, b)
+    }
+
+    function sigmoid(x) {
+        return Sigmoid()(x)
+    }
+
+    function mean_squared_error(x0, x1) {
+        return MeanSquaredError()(x0, x1)
+    }
+
 
     module.exports = {
         sin : sin,
@@ -144,6 +220,9 @@
         tanh : tanh,
         exp : exp,
         log : log,
-        matmul : matmul
+        matmul : matmul,
+        linear : linear,
+        sigmoid : sigmoid,
+        mean_squared_error : mean_squared_error
     }
 })()

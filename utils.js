@@ -29,7 +29,7 @@
         let axis = []
         for(let i = 0; i < ndim; i++) {
             if(shape[i] === 1) {
-                axis.push(i)
+                axis.push(i + lead)
             }
         }
 

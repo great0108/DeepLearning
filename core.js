@@ -164,6 +164,14 @@
         return sum(this, axis, keepdims)
     }
 
+
+    function Parameter() {
+        let args = Array.from(arguments)
+        Variable.apply(this, args)
+    }
+
+    Parameter.prototype.__proto__ = Variable.prototype
+
     
     function Operation() {
         return Callable.inherit(Operation)
@@ -233,8 +241,9 @@
     }
 
     Mul.prototype.backward = function(gy) {
-        let gx0 = this.inputs[0].mul(gy)
-        let gx1 = this.inputs[1].mul(gy)
+        let [x0, x1] = this.inputs
+        let gx0 = x1.mul(gy)
+        let gx1 = x0.mul(gy)
         if(!x0.shape.same(x1.shape)) {
             gx0 = sum_to(gx0, x0.shape)
             gx1 = sum_to(gx1, x1.shape)
@@ -516,11 +525,14 @@
 
     module.exports = {
         Variable : Variable,
+        Parameter : Parameter,
         Operation : Operation,
         List : List,
         as_array : as_array,
         as_variable : as_variable,
         no_grad : no_grad,
-        sum : sum
+        sum : sum,
+        sum_to : sum_to,
+        broadcast_to : broadcast_to
     }
 })()
