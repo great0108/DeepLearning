@@ -14,9 +14,7 @@
     Layer.inherit = Callable.inherit
 
     Layer.prototype.setattr = function(name, value) {
-        console.log(value)
         if(value instanceof Parameter || value instanceof Layer) {
-            console.log("!!!!!!!!!!!!")
             this._params.add(name)
         }
         this["_" + name] = value
@@ -53,11 +51,11 @@
     }
 
     Layer.prototype.params = function() {
-        let names = Array.from(this.params).map(v => "_" + v)
+        let names = Array.from(this._params).map(v => "_" + v)
         let result = []
         for(let name of names) {
             if(this[name] instanceof Layer) {
-                result.concat(this[name].params())
+                result = result.concat(this[name].params())
             } else {
                 result.push(this[name])
             }

@@ -22,7 +22,7 @@ TwoLayerNet.prototype.forward = function(x) {
     return y
 }
 
-let model = TwoLayerNet(10, 1)
+let model = TwoLayerNet(25, 1)
 let lr = 0.2
 let iters = 1000
 
