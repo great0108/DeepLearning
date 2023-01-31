@@ -1,28 +1,13 @@
 const {Variable} = require("./core")
 const {sigmoid, mean_squared_error} = require("./functions")
 const {Layer, Linear} = require("./layers")
+const {MLP} = require("./models")
 const Arr = require("./Arr")
 
 let x = Arr.rand(100, 1)
 let y = x.deepMap(v => Math.sin(2 * Math.PI * v) + Math.random())
 
-function TwoLayerNet(hidden_size, out_size) {
-    let result = Layer.inherit(TwoLayerNet)
-    result.layer1 = Linear(hidden_size)
-    result.layer2 = Linear(out_size)
-    return result
-}
-
-TwoLayerNet.prototype.__proto__ = Layer.prototype
-
-TwoLayerNet.prototype.forward = function(x) {
-    let y = this.layer1(x)
-    y = sigmoid(y)
-    y = this.layer2(y)
-    return y
-}
-
-let model = TwoLayerNet(25, 1)
+let model = MLP([20, 10, 1])
 let lr = 0.2
 let iters = 1000
 

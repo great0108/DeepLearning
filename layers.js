@@ -13,26 +13,12 @@
 
     Layer.inherit = Callable.inherit
 
-    Layer.prototype.setattr = function(name, value) {
+    Layer.prototype.set = function(name, value) {
         if(value instanceof Parameter || value instanceof Layer) {
             this._params.add(name)
         }
-        this["_" + name] = value
+        this[name] = value
     }
-
-    Layer.defineProperty = function(name) {
-        return {
-            set(value) {this.setattr(name, value)},
-            get() {return this["_" + name]}
-        }
-    }
-
-    Layer.properties = ["W", "b", "layer1", "layer2"]
-
-    Object.defineProperties(Layer.prototype, Layer.properties.reduce((obj, name) => {
-        obj[name] = Layer.defineProperty(name)
-        return obj
-    }, {}))
 
     Layer.prototype.__call__ = function() {
         let inputs = Array.from(arguments)
@@ -51,7 +37,7 @@
     }
 
     Layer.prototype.params = function() {
-        let names = Array.from(this._params).map(v => "_" + v)
+        let names = Array.from(this._params)
         let result = []
         for(let name of names) {
             if(this[name] instanceof Layer) {
@@ -74,7 +60,7 @@
         let result = Layer.inherit(Linear)
         result.in_size = in_size
         result.out_size = out_size
-        result.W = new Parameter(null, "W")
+        result.set("W", new Parameter(null, "W"))
 
         if(result.in_size !== undefined) {
             result._init_W()
@@ -83,7 +69,7 @@
         if(nobias) {
             result.b = null
         } else {
-            result.b = new Parameter(Arr.zeros(result.out_size), "b")
+            result.set("b", new Parameter(Arr.zeros(result.out_size), "b"))
         }
         return result
     }
