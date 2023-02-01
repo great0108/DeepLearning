@@ -2,6 +2,7 @@
     "use strict"
     const Arr = require("./Arr")
     const {Operation, Variable, List, sum_to} = require("./core")
+    const utils = require("./utils")
 
     function Sin() {
         return Operation.inherit(Sin)
@@ -154,6 +155,30 @@
     }
 
 
+    function Softmax(axis) {
+        let result = Operation.inherit(Softmax)
+        result.axis = axis === undefined ? 1 : axis
+        return result
+    }
+
+    Softmax.prototype.__proto__ = Operation.prototype
+
+    Softmax.prototype.forward = function(x) {
+        let y = x.minus(x.max(this.axis, true))
+        y = y.deepMap(v => Math.exp(v))
+        y = y.div(y.sum(this.axis, true))
+        return y
+    }
+
+    Softmax.prototype.backward = function(gy) {
+        let y = this.outputs[0]
+        let gx = y.mul(gy)
+        let sumdx = gx.sum(this.axis, true)
+        gx = gx.minus(y.mul(sumdx))
+        return gx
+    }
+
+
     function MeanSquaredError() {
         return Operation.inherit(MeanSquaredError)
     }
@@ -173,6 +198,35 @@
         let gx0 = gy.mul(diff).mul(2 / diff.length)
         let gx1 = gx0.mul(-1)
         return List(gx0, gx1)
+    }
+
+
+    function SoftmaxCrossEntropy() {
+        return Operation.inherit(SoftmaxCrossEntropy)
+    }
+
+    SoftmaxCrossEntropy.prototype.__proto__ = Operation.prototype
+
+    SoftmaxCrossEntropy.prototype.forward = function(x, t) {
+        let N = x.shape[0]
+        let log_z = utils.logsumexp(x, 1)
+        let log_p = x.minus(log_z)
+        t = t.flat()
+        let log_p2 = []
+        for(let i = 0; i < N; i++) {
+            log_p2.push(log_p[i][t[i]])
+        }
+        let y = -log_p2.sum() / N
+        return y
+    }
+
+    SoftmaxCrossEntropy.prototype.backward = function(gy) {
+        let [x, t] = this.inputs
+        let [N, CLS_NUM] = x.shape
+
+        gy = gy.mul(1/N)
+        let y = softmax(x)
+        let t_onehot = 1
     }
 
 
@@ -209,8 +263,16 @@
         return Sigmoid()(x)
     }
 
+    function softmax(x, axis) {
+        return Softmax(axis)(x)
+    }
+
     function mean_squared_error(x0, x1) {
         return MeanSquaredError()(x0, x1)
+    }
+
+    function softmax_cross_entropy(x, t) {
+        return SoftmaxCrossEntropy()(x, t)
     }
 
 
@@ -223,6 +285,8 @@
         matmul : matmul,
         linear : linear,
         sigmoid : sigmoid,
-        mean_squared_error : mean_squared_error
+        softmax : softmax,
+        mean_squared_error : mean_squared_error,
+        softmax_cross_entropy : softmax_cross_entropy
     }
 })()

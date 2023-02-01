@@ -144,6 +144,10 @@
         this.data = this.data.deepMap(fn)
     }
 
+    Variable.prototype.flat = function(n) {
+        this.data = this.data.flat(n)
+    }
+
     Variable.prototype.reshape = function(shape) {
         shape = arguments.length === 1 
         ? (Array.isArray(shape) ? shape : Array.of(shape)) 
@@ -445,6 +449,45 @@
     }
 
 
+    function GetItem(slices) {
+        let result = Operation.inherit(GetItem)
+        result.slices = slices
+        return result
+    }
+
+    GetItem.prototype.__proto__ = Operation.prototype
+
+    GetItem.prototype.forward = function(x) {
+        let y = x.slice(this.slices[0], this.slices[1])
+        return y
+    }
+
+    GetItem.prototype.backward = function(gy) {
+        let x = this.inputs[0]
+        let f = GetItemGrad(this.slices, x.shape)
+        return f(gy)
+    }
+
+
+    function GetItemGrad(slices, in_shape) {
+        let result = Operation.inherit(GetItemGrad)
+        result.slices = slices
+        result.in_shape = in_shape
+    }
+
+    GetItemGrad.prototype.__proto__ = Operation.prototype
+
+    GetItemGrad.prototype.forward = function(gy) {
+        let gx = Arr.zeros(this.in_shape)
+        gx.overlap(gy, this.slices[0], this.slices[1])
+        return gx
+    }
+
+    GetItemGrad.prototype.backward = function(ggx) {
+        return get_item(ggx, this.slices)
+    }
+
+
     function add(x0, x1) {
         x1 = as_array(x1)
         return Add()(x0, x1)
@@ -514,6 +557,20 @@
         return BroadcastTo(shape)(x)
     }
 
+    function slice(x, slices) {
+        return GetItem(slices)(x)
+    }
+
+    function get(x, index) {
+        let slices = null
+        if(Array.isArray(index)) {
+            slices = [index, index.map(v => v+1)]
+        } else {
+            slices = [index, index+1]
+        }
+        return GetItem(slices)(x)
+    }
+
     Variable.prototype.plus = function(x) {return add(this, x)}
     Variable.prototype.mul = function(x) {return mul(this, x)}
     Variable.prototype.neg = function() {return neg(this)}
@@ -522,6 +579,8 @@
     Variable.prototype.div = function(x) {return div(this, x)}
     Variable.prototype.rdiv = function(x) {return rdiv(this, x)}
     Variable.prototype.pow = function(c) {return pow(this, c)}
+    Variable.prototype.slice = function(start, end) {return slice(this, [start, end])}
+    Variable.prototype.get = function(index) {return get(this, index)}
 
     module.exports = {
         Variable : Variable,

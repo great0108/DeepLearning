@@ -253,6 +253,7 @@ Object.defineProperty(Arr.prototype, "slice", {
             end.push(-0.5)
         }
 
+        let size = this.shape
         start = start.map((v, i) => v >= 0 ? v : size[i] + v)
         start = start.map((v, i) => Math.min(Math.max(0, v), size[i]))
         end = end.map((v, i) => v >= 0 ? v : size[i] + v)
@@ -737,6 +738,13 @@ Object.defineProperty(Arr.prototype, "matmul", {
     value : function(arr) {
         let shape1 = this.shape
         let shape2 = arr.shape
+        if(shape1.length === 1) {
+            return this.expand(0).matmul(arr)
+        }
+        if(shape2.length === 1) {
+            arr = arr.expand(0)
+            shape2.unshift(1)
+        }
         if(shape1.length !== 2 || shape2.length !== 2) {
             throw new Error("2차원 배열이 아닙니다.")
         } else if(shape1[1] !== shape2[0]) {

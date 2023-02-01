@@ -685,6 +685,5 @@ class Layer:
             param.cleargrad()
 
 
-a = np.array([1,2])
-b = np.array([None, None])
-print(a + b)
+a = np.array([[1,2], [3,4]])
+print(a[[0,1,1], [0,1]])
