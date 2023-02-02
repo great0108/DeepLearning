@@ -795,6 +795,19 @@ Object.defineProperty(Arr.prototype, "matmul", {
     }
 })
 
+Object.defineProperty(Arr.prototype, "shuffle", {
+    value : function() {
+        let arr = this.slice()
+        const result = Array(arr.length)
+        for(let i = arr.length-1; i >= 0 ; i--) {
+            let j = Math.random() * (i+1) | 0
+            result[i] = arr[j]
+            arr[j] = arr[i]
+        }
+        return result
+    }
+})
+
 
 // Arr.prototype.choose = function(index, axis) {
 //     axis = axis === undefined ? 0 : axis
@@ -860,9 +873,6 @@ Object.defineProperty(Arr.prototype, "splice", {
 //     console.log(Date.now() - start)
 // }
 
-let a = Arr.range(6).reshape(2, 1, 3)
-let b = Arr.range(18).reshape(2, 3, 3)
-console.log(a.sum())
 
 module.exports = Arr
 

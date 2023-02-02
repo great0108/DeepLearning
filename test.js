@@ -1,33 +1,40 @@
 const {Variable} = require("./core")
-const {sigmoid, mean_squared_error} = require("./functions")
+const {sigmoid, mean_squared_error, softmax_cross_entropy} = require("./functions")
 const {Layer, Linear} = require("./layers")
 const {MLP} = require("./models")
 const {SGD, MomentumSGD, AdaGrad, AdaDelta, Adam} = require("./optimizers")
 const Arr = require("./Arr")
+const {get_spiral} = require("./datasets")
 
-// let x = Arr.rand(100, 1)
-// let y = x.deepMap(v => Math.sin(2 * Math.PI * v) + Math.random())
+let max_epoch = 100
+let batch_size = 20
+let hidden_size = 20
+let lr = 0.2
 
-// let lr = 0.2
-// let iters = 1000
+let [x, t] = get_spiral()
+let model = MLP([hidden_size, 3])
+let optimizer = Adam(lr).setup(model)
 
-// let model = MLP([20, 10, 1])
-// let optimizer = AdaGrad(lr).setup(model)
+let data_size = x.length
+let max_iter = Math.ceil(data_size / batch_size)
 
-// for(let i = 0; i < iters; i++) {
-//     let y_pred = model(x)
-//     let loss = mean_squared_error(y, y_pred)
+for(let epoch = 0; epoch < max_epoch; epoch++) {
+    sum_loss = 0
+    for(let i = 0; i < max_iter; i++) {
+        let batch_x = x.slice(i * batch_size, (i+1) * batch_size)
+        let batch_t = t.slice(i * batch_size, (i+1) * batch_size)
 
-//     model.cleargrads()
-//     loss.backward()
+        let y = model(batch_x)
+        let loss = softmax_cross_entropy(y, batch_t)
+        model.cleargrads()
+        loss.backward()
+        optimizer.update()
 
-//     optimizer.update()
+        sum_loss += loss.data[0] * batch_x.length
+    }
 
-//     if((i+1) % 100 === 0) {
-//         console.log(loss.view)
-//     }
-// }
-
-let arr = new Variable(Arr([[1,2,3], [4,5,6], [7,8,9]]))
-console.log(arr.get([1,1]).view)
-console.log(arr.slice(0, 2).view)
+    let avg_loss = sum_loss / data_size
+    if((epoch+1) % 20 === 0) {
+        console.log("epoch : " + (epoch+1) + "  loss : " + avg_loss)
+    }
+}

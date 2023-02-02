@@ -464,7 +464,7 @@
         let y = this.outputs[0]
 
         let shape = utils.max_backward_shape(x, this.axis)
-        let gy = reshape(gy, shape)
+        gy = reshape(gy, shape)
         y = reshape(y, shape)
         let cond = x.data.cal(y.data, (a, b) => a === b)
         gy = broadcast_to(g, x.shape)

@@ -212,11 +212,11 @@
         let log_z = utils.logsumexp(x, 1)
         let log_p = x.minus(log_z)
         t = t.flat()
-        let log_p2 = []
+        let log_p2 = 0
         for(let i = 0; i < N; i++) {
-            log_p2.push(log_p[i][t[i]])
+            log_p2 += log_p[i][t[i]]
         }
-        let y = -log_p2.sum() / N
+        let y = -log_p2 / N
         return y
     }
 
@@ -226,9 +226,9 @@
 
         gy = gy.mul(1/N)
         let y = softmax(x)
-        let t_onehot = []
+        let t_onehot = Arr()
         for(let i = 0; i < t.length; i++) {
-            let arr = Array(CLS_NUM).fill().map(v => 0)
+            let arr = Arr.zeros(CLS_NUM)
             arr[t.data[i]] = 1
             t_onehot.push(arr)
         }
