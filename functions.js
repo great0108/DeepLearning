@@ -226,7 +226,14 @@
 
         gy = gy.mul(1/N)
         let y = softmax(x)
-        let t_onehot = 1
+        let t_onehot = []
+        for(let i = 0; i < t.length; i++) {
+            let arr = Array(CLS_NUM).fill().map(v => 0)
+            arr[t.data[i]] = 1
+            t_onehot.push(arr)
+        }
+        y = y.minus(t_onehot).mul(gy)
+        return y
     }
 
 

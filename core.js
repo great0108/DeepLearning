@@ -164,10 +164,6 @@
         return transpose(this, axes)
     }
 
-    Variable.prototype.sum = function(axis, keepdims) {
-        return sum(this, axis, keepdims)
-    }
-
 
     function Parameter() {
         let args = Array.from(arguments)
@@ -449,6 +445,47 @@
     }
 
 
+    function Max(axis, keepdims) {
+        let result = Operation.inherit(Max)
+        result.axis = axis === undefined ? null : axis
+        result.keepdims = keepdims === undefined ? false : keepdims
+        return result
+    }
+
+    Max.prototype.__proto__ = Operation.prototype
+
+    Max.prototype.forward = function(x) {
+        let y = x.max(this.axis, this.keepdims)
+        return y
+    }
+
+    Max.prototype.backward = function(gy) {
+        let x = this.inputs[o]
+        let y = this.outputs[0]
+
+        let shape = utils.max_backward_shape(x, this.axis)
+        let gy = reshape(gy, shape)
+        y = reshape(y, shape)
+        let cond = x.data.cal(y.data, (a, b) => a === b)
+        gy = broadcast_to(g, x.shape)
+        return gy.mul(cond)
+    }
+
+
+    function Min(axis, keepdims) {
+        let result = Max(axis, keepdims)
+        Object.setPrototypeOf(result, Min.prootype)
+        return result
+    }
+
+    Min.prototype.__proto__ = Max.prototype
+
+    Min.prototype.forward = function(x) {
+        let y = x.min(this.axis, this.keepdims)
+        return y
+    }
+
+
     function GetItem(slices) {
         let result = Operation.inherit(GetItem)
         result.slices = slices
@@ -557,6 +594,14 @@
         return BroadcastTo(shape)(x)
     }
 
+    function max(x, axis, keepdims) {
+        return Max(axis, keepdims)(x)
+    }
+
+    function min(x, axis, keepdims) {
+        return Min(axis, keepdims)(x)
+    }
+
     function slice(x, slices) {
         return GetItem(slices)(x)
     }
@@ -571,6 +616,7 @@
         return GetItem(slices)(x)
     }
 
+
     Variable.prototype.plus = function(x) {return add(this, x)}
     Variable.prototype.mul = function(x) {return mul(this, x)}
     Variable.prototype.neg = function() {return neg(this)}
@@ -579,8 +625,12 @@
     Variable.prototype.div = function(x) {return div(this, x)}
     Variable.prototype.rdiv = function(x) {return rdiv(this, x)}
     Variable.prototype.pow = function(c) {return pow(this, c)}
+    Variable.prototype.sum = function(axis, keepdims) {return sum(this, axis, keepdims)}
+    Variable.prototype.max = function(axis, keepdims) {return max(this, axis, keepdims)}
+    Variable.prototype.min = function(axis, keepdims) {return min(this, axis, keepdims)}
     Variable.prototype.slice = function(start, end) {return slice(this, [start, end])}
     Variable.prototype.get = function(index) {return get(this, index)}
+
 
     module.exports = {
         Variable : Variable,

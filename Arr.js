@@ -582,7 +582,7 @@ Object.defineProperty(Arr.prototype, "transpose", {
     }
 })
 
-Object.defineProperty(Arr.prototype, "calaxis", {
+Object.defineProperty(Arr.prototype, "_calaxis", {
     value : function(axis, fn, index, size, len) {
         if(size === undefined) {
             size = this.shape
@@ -604,7 +604,7 @@ Object.defineProperty(Arr.prototype, "calaxis", {
             return fn(arr, index.slice(0))
         } else {
             for(let i = 0; i < size[index.length]; i++) {
-                arr.push(this.calaxis(axis, fn, index.concat(i), size, len))
+                arr.push(this._calaxis(axis, fn, index.concat(i), size, len))
             }
         }
         Object.setPrototypeOf(arr, Arr.prototype)
@@ -612,33 +612,14 @@ Object.defineProperty(Arr.prototype, "calaxis", {
     }
 })
 
-Object.defineProperty(Arr.prototype, "max", {
-    value : function(axis, keepdims) {
-        let result = this.calaxis(axis, v => Math.max.apply(null, v))
-        if(keepdims) {
-            result = result.expand(axis)
-        }
-        return result
-    }
-})
 
-Object.defineProperty(Arr.prototype, "min", {
-    value : function(axis, keepdims) {
-        let result = this.calaxis(axis, v => Math.min.apply(null, v))
-        if(keepdims) {
-            result = result.expand(axis)
-        }
-        return result
-    }
-})
-
-Object.defineProperty(Arr.prototype, "sum", {
-    value : function(axis, keepdims) {
+Object.defineProperty(Arr.prototype, "calaxis", {
+    value : function(axis, fn, keepdims) {
         if(axis === undefined || axis === null) {
             let ndim = this.ndim
-            let result = this.flat().reduce((a, b) => a+b, 0)
+            let result = [fn(this.flat())]
             if(keepdims) {
-                for(let i = 0; i < ndim; i++) {
+                for(let i = 1; i < ndim; i++) {
                     result = [result]
                 }
             }
@@ -648,16 +629,34 @@ Object.defineProperty(Arr.prototype, "sum", {
         if(Array.isArray(axis)) {
             let result = this
             for(let a of axis.sort((a, b) => b-a)) {
-                result = this.sum(a, keepdims)
+                result = this.calaxis(a, fn, keepdims)
             }
             return result
         }
 
-        let result = this.calaxis(axis, v => v.reduce((a, b) => a+b, 0))
+        let result = this._calaxis(axis, fn)
         if(keepdims) {
             result = result.expand(axis)
         }
         return result
+    }
+})
+
+Object.defineProperty(Arr.prototype, "max", {
+    value : function(axis, keepdims) {
+        return this.calaxis(axis, v => Math.max.apply(null, v), keepdims)
+    }
+})
+
+Object.defineProperty(Arr.prototype, "min", {
+    value : function(axis, keepdims) {
+        return this.calaxis(axis, v => Math.min.apply(null, v), keepdims)
+    }
+})
+
+Object.defineProperty(Arr.prototype, "sum", {
+    value : function(axis, keepdims) {
+        return this.calaxis(axis, v => v.reduce((a, v) => a+v, 0), keepdims)
     }
 })
 
@@ -734,23 +733,8 @@ Object.defineProperty(Arr.prototype, "select", {
     }
 })
 
-Object.defineProperty(Arr.prototype, "matmul", {
-    value : function(arr) {
-        let shape1 = this.shape
-        let shape2 = arr.shape
-        if(shape1.length === 1) {
-            return this.expand(0).matmul(arr)
-        }
-        if(shape2.length === 1) {
-            arr = arr.expand(0)
-            shape2.unshift(1)
-        }
-        if(shape1.length !== 2 || shape2.length !== 2) {
-            throw new Error("2차원 배열이 아닙니다.")
-        } else if(shape1[1] !== shape2[0]) {
-            throw new Error("행과 열의 길이가 달라 계산할 수 없습니다.")
-        }
-
+Object.defineProperty(Arr.prototype, "_matmul", {
+    value : function(arr, shape1, shape2) {
         let result = Arr.zeros([shape1[0], shape2[1]])
         let temp = null
         for(let k = 0; k < shape1[1]; k++) {
@@ -760,6 +744,52 @@ Object.defineProperty(Arr.prototype, "matmul", {
                     result[i][j] += arr[k][j] * temp
                 }
             }
+        }
+        return result
+    }
+})
+
+Object.defineProperty(Arr.prototype, "matmul", {
+    value : function(arr2) {
+        arr2 = Arr(arr2)
+        let arr1 = this
+        let shape1 = arr1.shape
+        let shape2 = arr2.shape
+        let ndim1 = shape1.length
+        let ndim2 = shape2.length
+
+        if(shape1.length === 1) {
+            arr1 = arr1.expand(0)
+            shape1.unshift(1)
+        }
+        if(shape2.length === 1) {
+            arr2 = arr2.expand(-1)
+            shape2.push(1)
+        }
+
+        if(shape1.length !== shape2.length) {
+            throw new Error("두 배열의 차원이 다릅니다.")
+        } else if(shape1[shape1.length-1] !== shape2[shape2.length-2]) {
+            throw new Error("행과 열의 길이가 다릅니다.")
+        } else if(!shape1.slice(0, -2).same(shape2.slice(0, -2)) ) {
+            throw new Error("배치 차원이 다릅니다.")
+        }
+
+        let result = null
+        if(shape1.length === 2) {
+            result = arr1._matmul(arr2, shape1, shape2)
+        } else {
+            let s1 = shape1.slice(-2)
+            let s2 = shape2.slice(-2)
+            result = Arr.zeros(shape1.slice(0, -2))
+            result.deepMap((v, i) => arr1.get(i)._matmul(arr2.get(i), s1, s2))
+        }
+        
+        if(ndim1 === 1) {
+            result.squeeze(0)
+        }
+        if(ndim2 === 1) {
+            result.squeeze(-1)
         }
         return result
     }
@@ -829,6 +859,10 @@ Object.defineProperty(Arr.prototype, "splice", {
 //     }
 //     console.log(Date.now() - start)
 // }
+
+let a = Arr.range(6).reshape(2, 1, 3)
+let b = Arr.range(18).reshape(2, 3, 3)
+console.log(a.sum())
 
 module.exports = Arr
 
