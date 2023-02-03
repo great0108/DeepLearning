@@ -2,6 +2,40 @@
     "use strict"
     const Arr = require("./Arr")
 
+    function Dataset(train, transform, target_transform) {
+        this.train = train
+        this.transform = transform === undefined ? a => a : transform
+        this.target_transform = target_transform === undefined ? a => a : target_transform
+        this.data = null
+        this.label = null
+        this.prepare()
+    }
+
+    Dataset.prototype.slice = function(start, end) {
+        if(this.label === null) {
+            return [this.transform(this.data.slice(start, end)), null]
+        } else {
+            return [this.transform(this.data.slice(start, end)), this.target_transform(this.label.slice(start, end))]
+        }
+    }
+
+    Dataset.prototype.get = function(index) {
+        if(this.label === null) {
+            return [this.transform(this.data.get(index)), null]
+        } else {
+            return [this.transform(this.data.get(index)), this.target_transform(this.label.get(index))]
+        }
+    }
+
+    Object.defineProperty(Dataset.prototype, "length", {
+        get() {return this.data.length}
+    })
+
+    Dataset.prototype.prepare = function() {
+        throw new Error("NotImplemented")
+    }
+
+
     function get_spiral() {
         let num_data = 100
         let num_class = 3
@@ -31,7 +65,20 @@
         return [x, t]
     }
 
+
+    function Spiral() {
+        Dataset.apply(this, Array.from(arguments))
+    }
+
+    Spiral.prototype.__proto__ = Dataset.prototype
+
+    Spiral.prototype.prepare = function() {
+        let [x, t] = get_spiral()
+        this.data = x
+        this.label = t
+    }
+
     module.exports = {
-        get_spiral : get_spiral
+        Spiral : Spiral
     }
 })()

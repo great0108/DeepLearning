@@ -241,9 +241,6 @@ Object.defineProperty(Arr.prototype, "slice", {
     value : function(start, end) {
         start = start === undefined ? 0 : start
         end = end === undefined ? this.length : end
-        if(typeof start === "number" && typeof end === "number") {
-            return this._slice(start, end)
-        }
         start = Array.isArray(start) ? start : Array.of(start)
         end = Array.isArray(end) ? end : Array.of(end)
         while(start.length < end.length) {
@@ -310,7 +307,7 @@ Object.defineProperty(Arr.prototype, "expand", {
         if(ndim < axis || axis < 0) {
             throw new Error("차원이 배열을 벗어났습니다.")
         }
-        return Arr.copy(this._expand(axis))
+        return Arr.deepArr(this._expand(axis))
     }
 })
 
@@ -567,6 +564,7 @@ Object.defineProperty(Arr.prototype, "transpose", {
         if(axis.length != size.length) {
             throw new Error("차원 개수가 맞지 않습니다.")
         }
+        axis = axis.map(v => v >= 0 ? v : size.length + v)
 
         for(let i = 0; i < size.length; i++) {
             if(!axis.includes(i)) {
@@ -614,22 +612,24 @@ Object.defineProperty(Arr.prototype, "_calaxis", {
 
 
 Object.defineProperty(Arr.prototype, "calaxis", {
-    value : function(axis, fn, keepdims) {
+    value : function(axis, fn, keepdims, opt) {
         if(axis === undefined || axis === null) {
             let ndim = this.ndim
-            let result = [fn(this.flat())]
-            if(keepdims) {
-                for(let i = 1; i < ndim; i++) {
-                    result = [result]
+            if(opt) {
+                let result = [fn(this.flat())]
+                if(keepdims) {
+                    for(let i = 1; i < ndim; i++) {
+                        result = [result]
+                    }
                 }
+                return Arr.deepArr(result)
             }
-            return Arr.deepArr(result)
+            axis = Array(ndim).fill().map((v, i) => i)
         }
-
         if(Array.isArray(axis)) {
             let result = this
             for(let a of axis.sort((a, b) => b-a)) {
-                result = this.calaxis(a, fn, keepdims)
+                result = result.calaxis(a, fn, keepdims)
             }
             return result
         }
@@ -644,19 +644,19 @@ Object.defineProperty(Arr.prototype, "calaxis", {
 
 Object.defineProperty(Arr.prototype, "max", {
     value : function(axis, keepdims) {
-        return this.calaxis(axis, v => Math.max.apply(null, v), keepdims)
+        return this.calaxis(axis, v => Math.max.apply(null, v), keepdims, true)
     }
 })
 
 Object.defineProperty(Arr.prototype, "min", {
     value : function(axis, keepdims) {
-        return this.calaxis(axis, v => Math.min.apply(null, v), keepdims)
+        return this.calaxis(axis, v => Math.min.apply(null, v), keepdims, true)
     }
 })
 
 Object.defineProperty(Arr.prototype, "sum", {
     value : function(axis, keepdims) {
-        return this.calaxis(axis, v => v.reduce((a, v) => a+v, 0), keepdims)
+        return this.calaxis(axis, v => v.reduce((a, v) => a+v, 0), keepdims, true)
     }
 })
 
@@ -676,6 +676,9 @@ Object.defineProperty(Arr.prototype, "T", {
 
 Object.defineProperty(Arr.prototype, "flip", {
     value : function(axis) {
+        axis = axis === undefined ? 0 : axis
+        axis = arguments.length === 1 ? axis : Array.from(arguments)
+
         if(Array.isArray(axis)) {
             let temp = this
             for(let a of axis) {
@@ -717,6 +720,8 @@ Object.defineProperty(Arr.prototype, "select", {
         if(size.length <= axis || axis < 0) {
             throw new Error("차원이 배열을 벗어났습니다.")
         }
+        
+        index = Array.isArray(index) ? index : Array.of(index)
         index = index.map(v => v >= 0 ? v : size[axis] + v)
         for(let i of index) {
             if(size[axis] <= i || index < 0) {
@@ -782,14 +787,14 @@ Object.defineProperty(Arr.prototype, "matmul", {
             let s1 = shape1.slice(-2)
             let s2 = shape2.slice(-2)
             result = Arr.zeros(shape1.slice(0, -2))
-            result.deepMap((v, i) => arr1.get(i)._matmul(arr2.get(i), s1, s2))
+            result = result.deepMap((v, i) => arr1.get(i)._matmul(arr2.get(i), s1, s2))
         }
-        
+        result = Arr.deepArr(result)
         if(ndim1 === 1) {
-            result.squeeze(0)
+            result = result.squeeze(0)
         }
         if(ndim2 === 1) {
-            result.squeeze(-1)
+            result = result.squeeze(-1)
         }
         return result
     }
@@ -860,10 +865,6 @@ Object.defineProperty(Arr.prototype, "splice", {
     }
 })
 
-// let a = Arr.range(9).reshape(3,3)
-// console.log(a.view())
-// console.log(a.select([1,0], -1).view())
-
 // function test() {
 //     let a = Arr.zeros(3,4,3)
 //     let start = Date.now()
@@ -873,10 +874,6 @@ Object.defineProperty(Arr.prototype, "splice", {
 //     console.log(Date.now() - start)
 // }
 
-
 module.exports = Arr
 
 })()
-
-
-

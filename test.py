@@ -685,5 +685,6 @@ class Layer:
             param.cleargrad()
 
 
-a = np.array([[1,2], [3,4]])
-print(a[[0,1,1], [0,1]])
+a = np.zeros((6,3,3))
+a += [0,1,2,3,4,5]
+print(a)

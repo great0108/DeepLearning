@@ -1,0 +1,647 @@
+다차원 배열을 다루는 모듈입니다.
+ex) 1차원 : [1,2], 2차원 : [[1,2], [3,4]], 3차원 : [[[1,2], [3,4]], [[5,6], [7,8]]], ...
+
+다차원 배열은 [[1,2], [3,4]] 처럼 배열 안에 있는 배열의 길이가 같아야 하고
+[[1,2], [3]] 이나 [[1], 2] 같은 배열은 사용할 수 없습니다.
+
+다차원 배열은 기존 배열과 인터페이스가 같기 때문에
+기존 배열의 모든 기능을 다 사용할 수 있습니다.
+
+다차원 배열 안에 들어갈 수 있는 원소는 숫자, 문자, 불리언, 함수, 기본 객체, null 입니다.
+클래스로 만든 인스턴스 객체는 기본 객체로 변경됩니다.
+
+
+기능 정리
+
+Arr
+Arr.fill
+Arr.zeros
+Arr.rand
+Arr.range
+Arr.prototype.copy
+Arr.prototype.same
+Arr.prototype.shape
+Arr.prototype.size
+Arr.prototype.ndim
+Arr.prototype.view
+Arr.prototype.get
+Arr.prototype.set
+Arr.prototype.deepFor
+Arr.prototype.deepMap
+Arr.prototype.slice
+Arr.prototype.overlap
+Arr.prototype.expand
+Arr.prototype.squeeze
+Arr.prototype.broadcast
+Arr.prototype.cal
+Arr.prototype.plus
+Arr.prototype.minus
+Arr.prototype.rminus
+Arr.prototype.mul
+Arr.prototype.div
+Arr.prototype.rdiv
+Arr.prototype.pow
+Arr.prototype.flat
+Arr.prototype.reshape
+Arr.prototype.swapaxis
+Arr.prototype.transpose
+Arr.prototype.T
+Arr.prototype.calaxis
+Arr.prototype.max
+Arr.prototype.min
+Arr.prototype.sum
+Arr.prototype.flip
+Arr.prototype.select
+Arr.prototype.matmul
+Arr.prototype.shuffle
+
+
+기능 설명
+
+Arr
+
+Arr([value1, [value2, ...]])
+
+새로운 배열을 만듭니다.
+배열 내부의 참조까지 사라집니다.
+
+let a = Arr(1)  // [1]
+let b = Arr(1,2,3)  // [1,2,3]
+let c = Arr([1,2])  // [1,2]
+let d = Arr([[1], [2]])  // [[1], [2]]
+let e = Arr()  // []
+
+
+Arr.fill
+
+Arr.fill(shape, value)
+
+value로 채워진 주어진 모양의 새로운 배열을 만듭니다.
+
+let a = Arr.fill(3, 1)  // [1,1,1]
+let b = Arr.fill([3], 2)  // [2,2,2]
+let c = Arr.fill([2,2], 3)  // [[3,3], [3,3]]
+let d = Arr.fill([2,2], [1,2])  // [[1,2], [1,2]]
+
+
+Arr.zeros
+
+Arr.zeros(shape1, [shape2, ...])
+
+0으로 채워진 주어진 모양의 새로운 배열을 만듭니다.
+
+let a = Arr.zeros(3)  // [0,0,0]
+let b = Arr.zeros(2, 2)  // [[0,0], [0,0]]
+let c = Arr.zeros([4])  // [0,0,0,0]
+let d = Arr.zeros([2,2])  //[[0,0], [0,0]]
+
+
+Arr.rand
+
+Arr.rand(shape1, [shape2, ...])
+
+0에서 1사이의 랜덤한 값으로 채워진 주어진 모양의 새로운 배열을 만듭니다.
+
+let a = Arr.zeros(3)  // [ 0.300031767669219, 0.9498584474907894, 0.06280466167053333 ]
+let b = Arr.zeros(2, 2)  // [[0.8831492033209247, 0.8556471177793865], [0.7880855727167184, 0.4662515399541203]]
+
+
+Arr.range
+
+Arr.range([start,] stop, [step])
+
+주어진 구간 내에서 주어진 간격의 값을 가진 새로운 배열을 만듭니다.
+
+let a = Arr.range(3)  // [0,1,2]
+let b = Arr.range(2, 5)  // [2,3,4]
+let c = Arr.range(1, 6, 2)  // [1,3,5]
+let d = Arr.range(4, 1, -1)  // [4,3,2]
+
+
+Arr.prototype.copy
+
+array.copy()
+
+배열의 깊은 복사본을 반환합니다.
+
+let a = Arr.zeros(2, 2)
+let b = a.copy()
+b[0][0] = 1
+console.log(a)  // [[0,0], [0,0]]
+console.log(b)  // [[1,0], [0,0]]
+
+
+Arr.prototype.same
+
+array.same(arr)
+
+두 배열을 요소별로 비교합니다.
+깊은 비교를 하지는 않습니다.
+
+let a = Arr([1,2,3])
+a.same(Arr.range(1, 4))  // true
+let b = Arr.zeros(2, 2)
+b.same([[0,0], [0,0]])  // false 배열 안의 배열의 주소값이 다르기 때문
+
+
+Arr.prototype.shape
+
+array.shape
+
+배열의 모양을 반환합니다.
+
+let a = Arr([1,2,3])
+a.shape  // [3]
+let b = Arr([[1,2], [3,4]])
+b.shape  // [2,2]
+let c = Arr.fill([3,2,1], 2)
+c.shape  // [3,2,1]
+
+
+Arr.prototype.ndim
+
+array.ndim
+
+배열의 차원 개수를 반환합니다.
+
+let a = Arr([1,2,3])
+a.ndim  // 1
+let b = Arr([[1,2], [3,4]])
+b.ndim  // 2
+let c = Arr.fill([3,2,1], 2)
+c.ndim  // 3
+
+
+Arr.prototype.size
+
+array.size
+
+배열의 총 요소 개수를 반환합니다.
+
+let a = Arr([1,2,3])
+a.size  // 6
+let b = Arr([[1,2], [3,4]])
+b.size  // 4
+let c = Arr.fill([3,2,1], 2)
+c.size  // 6
+
+
+Arr.prototype.view
+
+arr.view
+
+배열을 보기 좋은 새로운 문자열로 만듭니다.
+
+let a = Arr.fill([2,3], 1)
+console.log(a.view)
+// [[1, 1, 1]
+//  [1, 1, 1]]
+
+let b = Arr.zeros(2,2,2)
+console.log(b.view)
+// [[[0, 0]
+//   [0, 0]]
+//
+//  [[0, 0]
+//   [0, 0]]]
+
+
+Arr.prototype.get
+
+array.get([index1, [index2, ...]])
+
+배열에서 해당 인덱스에 있는 요소를 가져옵니다.
+인자를 생략하면 배열 전체를 가져옵니다.
+
+let a = Arr([[1,2], [3,4]])
+a.get()  // [[1,2], [3,4]]
+a.get(0)  // [1,2]
+a.get(-1)  // [3,4]
+a.get(1, 0)  // 3
+a.get([0,0])  // 1
+a.get([-2, 1])  // 2
+
+
+Arr.prototype.set
+
+array.set(index, value)
+
+배열에서 해당 인덱스에 있는 요소를 value로 변경합니다.
+
+let a = Arr([[1,2], [3,4]])
+a.set(0, [2,1])  // 현재 a : [[2,1], [3,4]]
+a.set(-1, [4,5])  // 현재 a : [[2,1], [4,5]]
+a.set([0,0], 0)  // 현재 a : [[0,1], [4,5]]
+a.set([1,-1], 1)  // 현재 a : [[0,1], [4,1]]
+
+
+Arr.prototype.deepFor
+
+array.deepFor(callback(currentvalue, [index]))
+
+배열의 깊은 순회를 하면서 주어진 함수를 각 요소에 대해 실행시킵니다.
+
+let a = Arr([[1,2], [3,4]])
+a.deepFor(v => console.log(v))  //1, 2, 3, 4 가 차례대로 출력
+a.deepFor((v, i) => console.log(i))  //[0,0], [0,1], [1,0], [1,1] 이 차례대로 출력
+a.deepFor((v, i) => a.set(i, v+1))  //a를 [[2,3], [4,5]]로 변경
+
+
+Arr.prototype.deepMap
+
+array.deepMap(callback(currentvalue, [index]))
+
+배열의 깊은 순회를 하면서 주어진 함수를 각 요소에 대해 실행한 결과를 모아 새로운 배열을 만듭니다.
+
+let a = Arr([[1,2], [3,4]])
+a.deepMap(v => v+1)  // [[2,3], [4,5]]
+a.deepMap((v, i) => i[0] + i[1])  // [[0,1],[1,2]]
+
+
+Arr.prototype.slice
+
+array.slice([start, [end]])
+
+배열의 주어진 구간에 대한 얕은 복사본을 만듭니다.
+
+let a = Arr([[1,2,3], [4,5,6], [7,8,9]])
+a.slice()  // [[1,2,3], [4,5,6], [7,8,9]]
+a.slice(1)  // [[4,5,6], [7,8,9]]
+a.slice(1, 2)  // [[4,5,6]]
+a.slice(0, -1)  // [[1,2,3], [4,5,6]]
+a.slice([0,1], [2,2])  // 첫번째 축을 [0,2)로 잘라서 [[1,2,3], [4,5,6]] 을 만들고 
+                       // 두번째 축을 [1,2)로 잘라서 [[2], [5]] 가 된다
+a.slice([0,1], [2])  // 첫번째 축을 [0,2)로 자르고 두번째 축을 [1, 끝]으로 잘라서 [[2,3], [5,6]]
+a.slice([0,1], 2)  // [[2,3], [5,6]]
+a.slice([1,1])  //첫번째 축을 [1, 끝]으로 자르고 두번째 축도 [1, 끝]으로 잘라서 [[5,6], [8,9]]
+a.slice([1], [2,2])  // 첫번째 축을 [1,2)로 자르고 두번째 축을 [시작, 2)로 잘라서 [[4,5]]
+a.slice(0, [-1,-1])  // 첫번째 축을 [0,-1)로 자르고 두번째 축도 [0,-1)로 잘라서 [[1,2], [4,5]]
+a.slice([0,1], -2)  // 첫번째 축을 [0, -2)로 자르고 두번째 축을 [1, 끝]으로 잘라서 [[2,3]]
+
+
+
+Arr.prototype.overlap
+
+array.overlap(value, [start, [end]])
+
+배열의 주어진 구간의 값을 value로 변경합니다.
+값이 주어진 구간과 맞지 않는다면 자동으로 주어진 구간의 크기에 맞게 값을 늘려줍니다
+
+let a = Arr.zeros(3, 2)
+a.overlap(1)  // 현재 a : [[1,1], [1,1], [1,1]]
+a.overlap([1,2])  // 현재 a : [[1,2], [1,2], [1,2]]
+a.overlap([3,2], 1)  // 현재 a : [[1,2], [3,2], [3,2]]
+a.overlap(1, 0, 1)  // 현재 a : [[1,1], [3,2], [3,2]]
+a.overlap(2, -1)  // 현재 a : [[1,1], [3,2], [2,2]]
+a.overlap(0, [1,1])  // 현재 a : [[1,1], [3,0], [2,0]]
+a.overlap([4,5], 0, [-1, -1])  // 현재 a : [[4,1], [5,0], [2,0]]
+a.overlap(6, [1,0], [2,1])  // 현재 a : [[4,1], [6,0], [2,0]]
+
+
+Arr.prototype.expand
+
+array.expand(axis1, [axis2, ...])
+                    
+주어진 축을 삽입한 새로운 배열을 만듭니다.
+
+let a = Arr.fill(3, 1)  // [1,1,1]
+a.expand(0)  // [[1,1,1]]
+a.expand(1)  // [[1], [1], [1]]
+a.expand(-1)  // [[1], [1], [1]]
+a.expand(0, 1)  // 0번째 축을 넣어서 [[1,1,1]] 을 만들고 1번째 축을 넣어서 [[[1,1,1]]]
+a.expand([0, -1])  // 0번째 축을 넣어서 [[1,1,1]] 을 만들고 -1번째 축을 넣어서 [[[1], [1], [1]]]
+
+
+Arr.prototype.squeeze
+
+array.squeeze([axis1, [axis2, ...]])
+
+주어진 축을 제거한 새로운 배열을 만듭니다.
+인자를 생략하면 제거 할 수 있는 모든 차원을 제거합니다.
+
+let a = Arr.fill(3, 1).expand([0, -1])  // [[[1], [1], [1]]]
+a.squeeze(0)  // [[1], [1], [1]]
+a.squeeze(2)  // [[1,1,1]]
+a.squeeze(-1)  // [[1,1,1]]
+a.squeeze(0, 1)  // 0번째 축을 제거해서 [[1], [1], [1]] 을 만들고 1번째 축을 제거해서 [1,1,1]
+a.squeeze([-1, 0])  //-1번째 축을 제거해서 [[1,1,1]] 을 만들고 0번째 축을 제거해서 [1,1,1]
+a.squeeze()  // 제거 할 수 있는 모든 차원을 제거해서 [1,1,1]
+
+
+Arr.prototype.broadcast
+
+array.broadcast(shape1, [shape2, ...])
+
+주어진 모양에 맞게 늘린 새로운 배열을 만듭니다.
+
+let a = Arr([1])
+a.broadcast(3)  // [1,1,1]
+a.broadcast(2, 2)  // [[1,1], [1,1]]
+a.broadcast([2,2])  // [[1,1], [1,1]]
+let b = Arr([1,2])
+b.broadcast([3,2])  // [[1,2], [1,2], [1,2]]
+b.broadcast([2,2,2])  // [[[1,2], [1,2]], [[1,2], [1,2]]]
+let c = Arr([[1], [2]])
+c.broadcast([2,3])  // [[1,1,1], [2,2,2]]
+
+
+Arr.prototype.cal
+
+array.cal(value, callback(arrayvalue1, arrayvalue2))
+
+배열의 깊은 순회를 하면서 주어진 함수를 배열과 값의 각 요소에 대해 실행시킨 결과를 모아 새로운 배열을 만듭니다.
+값이 배열의 모양에 맞지 않는다면 자동으로 배열의 모양에 맞게 값을 늘려줍니다.
+
+let a = Arr([[1,2], [3,4]])
+a.cal([[1,2], [1,2]], (a,b) => a+b)  // [[2,4], [4,6]]
+a.cal([1,2], (a,b) => a+b)  // 자동으로 배열의 모양에 맞게 값을 늘려서 [[1,2], [1,2]] 로 만든 뒤에 계산해서 [[2,4], [4,6]]
+a.cal(1, (a,b) => a+b)  // 자동으로 배열의 모양에 맞게 값을 늘려서 [[1,1], [1,1]] 로 만든 뒤에 계산해서 [[2,3], [4,5]]
+a.cal(2, (a,b) => a*b)  // [[2,4], [6,8]]
+
+
+Arr.prototype.plus
+
+array.plus(value)
+
+배열의 깊은 순회를 하면서 배열과 값의 각 요소를 더한 결과를 모아 새로운 배열을 만듭니다.
+값이 배열의 모양에 맞지 않는다면 자동으로 배열의 모양에 맞게 값을 늘려줍니다.
+
+let a = Arr([[1,2], [3,4]])
+a.plus([[1,2], [1,2]])  // [[2,4], [4,6]]
+a.plus([1,2])  // [[2,4], [4,6]]
+a.plus(1)  // [[2,3], [4,5]]
+
+
+Arr.prototype.minus
+
+array.minus(value)
+
+배열의 깊은 순회를 하면서 배열에 값의 각 요소를 뺀 결과를 모아 새로운 배열을 만듭니다.
+값이 배열의 모양에 맞지 않는다면 자동으로 배열의 모양에 맞게 값을 늘려줍니다.
+
+let a = Arr([[1,2], [3,4]])
+a.minus([[1,2], [1,2]])  // [[0,0], [2,2]]
+a.minus([1,2])  // [[0,0], [2,2]]
+a.minus(1)  // [[0,1], [2,3]]
+
+
+Arr.prototype.rminus
+
+array.rminus(value)
+
+배열의 깊은 순회를 하면서 값에 배열의 각 요소를 뺀 결과를 모아 새로운 배열을 만듭니다.
+값이 배열의 모양에 맞지 않는다면 자동으로 배열의 모양에 맞게 값을 늘려줍니다.
+
+let a = Arr([[1,2], [3,4]])
+a.rminus([[1,2], [1,2]])  // [[0,0], [-2,-2]] ( [[1,2], [1,2]] - [[1,2], [3,4]] )
+a.rminus([1,2])  // [[0,0], [-2,-2]]
+a.rminus(1)  // [[0,-1], [-2,-3]]
+
+
+Arr.prototype.mul
+
+array.mul(value)
+
+배열의 깊은 순회를 하면서 배열과 값의 각 요소를 곱한 결과를 모아 새로운 배열을 만듭니다.
+값이 배열의 모양에 맞지 않는다면 자동으로 배열의 모양에 맞게 값을 늘려줍니다.
+
+let a = Arr([[1,2], [3,4]])
+a.mul([[1,2], [1,2]])  // [[1,4], [3,8]]
+a.mul([1,2])  // [[1,4], [3,8]]
+a.mul(2)  // [[2,4], [6,8]]
+
+
+Arr.prototype.div
+
+array.div(value)
+
+배열의 깊은 순회를 하면서 배열에 값의 각 요소를 나눈 결과를 모아 새로운 배열을 만듭니다.
+값이 배열의 모양에 맞지 않는다면 자동으로 배열의 모양에 맞게 값을 늘려줍니다.
+
+let a = Arr([[1,2], [3,4]])
+a.div([[1,2], [1,2]])  // [[1,1], [3,2]]
+a.div([1,2])  // [[1,1], [3,2]]
+a.div(2)  // [[0.5,1], [1.5,2]]
+
+
+Arr.prototype.rdiv
+
+array.rdiv(value)
+
+배열의 깊은 순회를 하면서 값에 배열의 각 요소를 나눈 결과를 모아 새로운 배열을 만듭니다.
+값이 배열의 모양에 맞지 않는다면 자동으로 배열의 모양에 맞게 값을 늘려줍니다.
+
+let a = Arr([[1,2], [2,4]])
+a.rdiv([[1,2], [1,2]])  // [[1,1], [0.5,0.5]] ( [[1,2], [1,2]] / [[1,2], [2,4]])
+a.rdiv([1,2])  // [[1,1], [0.5,0.5]]
+a.rdiv(2)  // [[2,1], [1,0.5]]
+
+
+Arr.prototype.pow
+
+array.pow(value)
+
+배열의 깊은 순회를 하면서 배열에 값의 각 요소를 거듭제곱한 결과를 모아 새로운 배열을 만듭니다.
+값이 배열의 모양에 맞지 않는다면 자동으로 배열의 모양에 맞게 값을 늘려줍니다.
+
+let a = Arr([[1,2], [3,4]])
+a.pow([[1,2], [1,2]])  // [[1,4], [3,16]]
+a.pow([1,2])  // [[1,4], [3,16]]
+a.pow(2)  // [[1,4], [9,16]]
+
+
+Arr.prototype.flat
+
+array.flat([depth])
+
+주어진 깊이까지 평탄화한 새로운 배열을 만듭니다.
+인자를 생략하면 모두 평탄화 합니다.
+
+let a = Arr.zeros(2,2,2) // [[[0,0], [0,0]], [[0,0], [0,0]]]
+a.flat(1)  // [[0,0], [0,0], [0,0], [0,0]]
+a.flat(2)  // [0,0,0,0,0,0,0,0]
+a.flat()  // 인자를 생략하면 모두 평탄화 하므로 [0,0,0,0,0,0,0,0]
+
+
+Arr.prototype.reshape
+
+array.reshape(shape1, [shape2, ...])
+
+주어진 모양으로 변환시킨 새로운 배열을 만듭니다.
+하나의 모양 차원은 -1일 수 있고 이 경우에는 배열의 길이와 나머지 차원으로부터 유추합니다.
+
+let a = Arr.range(6) // [0,1,2,3,4,5]
+a.reshape(2, 3)  // [[0,1,2], [3,4,5]]
+a.reshape(2, -1)  // 2 * x 차원을 가져야 하는데 배열의 길이가 6이므로 x는 3이 되서 [[0,1,2], [3,4,5]]
+a.reshape([3,2])  // [[0,1], [2,3], [4,5]]
+let b = Arr([[1,2], [3,4]])
+b.reshape(-1)  // [1,2,3,4]
+
+
+Arr.prototype.swapaxis
+
+array.swapaxis(axis1, axis2)
+
+배열의 두 축을 교환한 새로운 배열을 만듭니다.
+
+let a = Arr([[1,2], [3,4]])
+a.swapaxis(0, 1)  // [[1,3], [2,4]]
+a.swapaxis(0, -1)  // [[1,3], [2,4]]
+let b = Arr.zeros(3,2,1)
+b.swapaxis(0, 1).shape  // [2,3,1]
+
+
+Arr.prototype.transpose
+
+array.transpose([axis1, [axis2, ...]])
+
+축이 바뀐 새로운 배열을 만듭니다.
+인자를 생략하면 축을 반대로 한 새로운 배열을 만듭니다.
+
+let a = Arr([[1,2], [3,4]])
+a.transpose(1, 0)  // [[1,3], [2,4]]
+a.transpose([-1, 0])  // [[1,3], [2,4]]
+let b = Arr.zeros(3,2,1)
+b.transpose(1, 0, 2).shape  // [2,3,1]
+b.transpose().shape  // [1,2,3]
+
+
+Arr.prototype.T
+
+array.T
+
+축을 반대로 한 새로운 배열을 반환합니다.
+
+let a = Arr([[1,2], [3,4]])
+a.T  // [[1,3], [2,4]]
+let b = Arr.zeros(3,2,1)
+b.T.shape  // [1,2,3]
+
+
+Arr.prototype.calaxis
+
+array.calaxis(axis, callback(currentvalue, [index]), [keepdims])
+
+배열의 축을 따라 주어진 함수를 실행한 결과를 모아 새로운 배열을 만듭니다.
+axis가 null이라면 모든 축에 대해서 주어진 함수를 실행합니다.
+keepdims가 true라면 차원을 축소시키지 않습니다
+
+let a = Arr([[1,2], [3,4]])
+a.calaxis(1, v => v[0])  // [1,3] ( [1,2] => 1, [3,4] => 3 )
+a.calaxis(0, v => v[0])  // [1,2] ( [1,3] => 1, [2,4] => 2 )
+a.calaxis(1, v => v[0], true)  // [[1], [3]]
+a.calaxis(1, (v, i) => v[0] + i)  // [1, 4]
+a.calaxis(-1, v => v[0])  // [1,3]
+a.calaxis([0, 1], v => v[1])  // [4] ([[1,2], [3,4]] => [2,4] => [4])
+a.calaxis(null, v => v[1])  // [4]
+
+
+Arr.prototype.max
+
+array.max([axis, [keepdims]])
+
+배열의 축을 따라 최댓값을 구합니다.
+axis를 생략하거나 null이라면 모든 값에 대해서 최댓값을 구합니다
+keepdims가 true라면 차원을 축소시키지 않습니다
+
+let a = Arr([[1,2], [3,4]])
+a.max(1)  // [2,4]
+a.max(0)  // [3,4]
+a.max(1, true)  // [[2], [4]]
+a.max(-1)  // [2,4]
+a.max([0, 1])  // [4]
+a.max()  // [4]
+
+
+Arr.prototype.min
+
+array.min([axis, [keepdims]])
+
+배열의 축을 따라 최솟값을 구합니다.
+axis를 생략하거나 null이라면 모든 값에 대해서 최솟값을 구합니다
+keepdims가 true라면 차원을 축소시키지 않습니다
+
+let a = Arr([[1,2], [3,4]])
+a.min(1)  // [1,3]
+a.min(0)  // [1,2]
+a.min(1, true)  // [[1], [3]]
+a.min(-1)  // [1,3]
+a.min([0, 1])  // [4]
+a.min()  // [4]
+
+
+Arr.prototype.sum
+
+array.sum([axis, [keepdims]])
+
+배열의 축을 따라 합을 구합니다.
+axis를 생략하거나 null이라면 모든 값에 대해서 합을 구합니다
+keepdims가 true라면 차원을 축소시키지 않습니다
+
+let a = Arr([[1,2], [3,4]])
+a.sum(1)  // [3,7]
+a.sum(0)  // [4,6]
+a.sum(1, true)  // [[3], [7]]
+a.sum(-1)  // [3,7]
+a.sum([0, 1])  // [10]
+a.sum()  // [10]
+
+
+Arr.prototype.flip
+
+array.flip([axis1, [axis2...]])
+
+배열의 축을 따라 뒤집습니다.
+인자를 생략하면 0번째 축을 따라 뒤집습니다.
+
+let a = Arr([[1,2], [3,4]])
+a.flip(1)  // [[2,1], [4,3]]
+a.flip(0)  // [[3,4], [1,2]]
+a.flip(-1)  // [[2,1], [4,3]]
+a.flip()  // [[3,4], [1,2]]
+a.flip([0,1])  // [[4,3], [2,1]]
+
+
+Arr.prototype.select
+
+array.select(indexs, [axis])
+
+주어진 축에 대해서 배열의 주어진 인덱스를 가져와서 새로운 배열을 만듭니다.
+axis를 생략하면 0번째 축이라고 가정합니다.
+
+let a = Arr([[1,2], [3,4]])
+a.select(0)  // [[1,2]]
+a.select([1,0,0])  // [[3,4], [1,2], [1,2]]
+a.select(-1)  // [[3,4]]
+a.select(0, 1)  // [[1], [3]]
+a.select([1,0,0], 1)  // [[2,1,1], [4,3,3]]
+
+
+Arr.prototype.matmul
+
+array.matmul(arr)
+
+두 배열의 행렬 곱을 구합니다.
+첫 번째 배열이 1차원이면 차원 앞에 1을 추가하여 2차원으로 만듭니다, 행렬 곱 후에 차원에 추가된 1이 제거됩니다.
+두 번째 배열이 2차원이면 차원 뒤에 1을 추가하여 2차원으로 만듭니다, 행렬 곱 후에 차원에 추가된 1이 제거됩니다.
+두 배열이 3차원 이상이면 차원개수-2 만큼의 차원은 배치로 취급합니다
+
+let a = Arr([[1,0], [0,1]])
+a.matmul([[4,1], [2,2]])  // [[4,1], [2,2]]
+a.matmul([1,2])  // [1, 2]
+let b = Arr([1,0])
+b.matmul([[4,1], [2,2]])  // [4,1]
+let c = Arr.zeros(4,3,2)
+c.matmul(Arr.zeros(4,2,5)).shape  // [4,3,5]
+
+
+Arr.prototype.shuffle
+
+array.shuffle()
+
+배열을 뒤섞은 얕은 복사본을 만듭니다.
+
+let a = Arr.range(4)
+a.shuffle()  // [1,2,0,3]
+let b = Arr([[1,2], [3,4], [5,6]])
+b.shuffle()  // [[5,6], [1,2], [3,4]]
