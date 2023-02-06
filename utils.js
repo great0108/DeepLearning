@@ -70,10 +70,19 @@
         return shape
     }
 
+    function read_csv(url) {
+        const fs = require("fs")
+        const csv = fs.readFileSync(url, "utf-8")
+        const rows = csv.split("\n")
+        const result = rows.map(v => v.split(","))
+        return Arr(result)
+    }
+
     module.exports = {
         reshape_sum_backward : reshape_sum_backward,
         sum_to : sum_to,
         logsumexp : logsumexp,
-        max_backward_shape : max_backward_shape
+        max_backward_shape : max_backward_shape,
+        read_csv : read_csv
     }
 })()

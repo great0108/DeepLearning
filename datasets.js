@@ -1,36 +1,33 @@
 (function() {
     "use strict"
     const Arr = require("./Arr")
+    const utils = require("./utils")
 
     function Dataset(train, transform, target_transform) {
-        this.train = train
+        this.train = train === undefined ? true : train
         this.transform = transform === undefined ? a => a : transform
         this.target_transform = target_transform === undefined ? a => a : target_transform
         this.data = null
         this.label = null
         this.prepare()
-    }
-
-    Dataset.prototype.getItem = function() {
-        let a = Array.from(arguments)
-        let method = a.shift()
-        if(this.label === null) {
-            return [this.transform(this.data[method].apply(this.data, a)), null]
-        } else {
-            return [this.transform(this.data[method].apply(this.data, a)), this.target_transform(this.label[method].apply(this.label, a))]
-        }
-    }
-
-    Dataset.prototype.select = function(indexs) {
-        return this.getItem("select", indexs)
+        this.data = this.transform(this.data)
+        this.label = this.target_transform(this.label)
     }
 
     Dataset.prototype.slice = function(start, end) {
-        return this.slice("slice", start, end)
+        if(this.label === null) {
+            return [this.data.slice(start, end), null]
+        } else {
+            return [this.data.slice(start, end), this.label.slice(start, end)]
+        }
     }
 
     Dataset.prototype.get = function(index) {
-        return this.get("get", index)
+        if(this.label === null) {
+            return [this.data[index], null]
+        } else {
+            return [this.data[index], this.label[index]]
+        }
     }
 
     Object.defineProperty(Dataset.prototype, "length", {
@@ -84,7 +81,32 @@
         this.label = t
     }
 
+
+    function Mnist(train, transform, target_transform) {
+        transform = transform === undefined ? a => a.deepMap(v => Number(v) / 255) : transform
+        target_transform = target_transform === undefined ? a => a.deepMap(v => Number(v)).argmax(1) : target_transform
+        Dataset.call(this, train, transform, target_transform)
+    }
+
+    Mnist.prototype.__proto__ = Dataset.prototype
+
+    Mnist.prototype.prepare = function() {
+        let data = null
+        let label = null
+        if(this.train) {
+            data = utils.read_csv("./mnist_csv/csv_image.csv")
+            label = utils.read_csv("./mnist_csv/csv_label.csv")
+        } else {
+            data = utils.read_csv("./mnist_csv/csv_image_test.csv")
+            label = utils.read_csv("./mnist_csv/csv_label_test.csv")
+        }
+
+        this.data = data
+        this.label = label
+    }
+
     module.exports = {
-        Spiral : Spiral
+        Spiral : Spiral,
+        Mnist : Mnist
     }
 })()

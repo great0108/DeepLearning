@@ -144,7 +144,7 @@
     Sigmoid.prototype.__proto__ = Operation.prototype
 
     Sigmoid.prototype.forward = function(x) {
-        let y = x.mul(0.5).deepMap(v => Math.tanh(v)).mul(0.5).plus(0.5)
+        let y = x.deepMap(v => Math.tanh(v * 0.5) * 0.5 + 0.5)
         return y
     }
 
@@ -287,7 +287,7 @@
         y = as_variable(y)
         t = as_variable(t)
 
-        let pred = y.data.calaxis(1, v => v.indexOf(Math.max.apply(null, v))).reshape(t.shape)
+        let pred = y.data.argmax(1).reshape(t.shape)
         let result = pred.cal(t.data, (a, b) => a === b)
         let acc = result.sum().div(result.length)
         return as_variable(as_array(acc))

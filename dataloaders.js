@@ -26,7 +26,9 @@
             if(i === this.max_iter-1) {
                 this.reset()
             }
-            yield this.dataset.select(batch_index)
+            let batch = batch_index.map(v => this.dataset.get(v))
+            yield [batch.map(v => v[0]), batch.map(v => v[1])]
+            //yield this.dataset.select(batch_index)
         }
     }
 

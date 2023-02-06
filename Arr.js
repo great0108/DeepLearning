@@ -4,7 +4,11 @@
 
 function deepCopy(target) {
     if(Array.isArray(target)) {
-        return target.map(v => deepCopy(v))
+        let result = []
+        for(let i = 0; i < target.length; i++) {
+            result.push(deepCopy(target[i]))
+        }
+        return target
     }
     if(typeof target === "object") {
         target = Object.assign({}, target)
@@ -133,17 +137,30 @@ Object.defineProperty(Arr.prototype, "same", {
 
 Object.defineProperty(Arr.prototype, "shape", {
     get : function() {
-        if(this.every(v => !Array.isArray(v))) {
-            return Arr(this.length)
+        let length = this.length
+        if(length === 0) {
+            return Arr(0)
         }
-        if(this.every(v => Array.isArray(v))) {
-            let arr = this.map(v => v.shape)
-            if(arr.every(v => arr[0].same(v))) {
-                arr[0].unshift(this.length)
-                return arr[0]
+
+        let check = Array.isArray(this[0])
+        for(let i = 1; i < length; i++) {
+            if(Array.isArray(this[i]) !== check) {
+                throw new Error("크기가 일정하지 않습니다.")
             }
         }
-        throw new Error("크기가 일정하지 않습니다.")
+        
+        if(!check) {
+            return Arr(length)
+        }
+
+        let size = this[0].shape
+        for(let i = 1; i < length; i++) {
+            if(!size.same(this[i].shape)) {
+                throw new Error("크기가 일정하지 않습니다.")
+            }
+        }
+        size.unshift(length)
+        return size
     }
 })
 
@@ -208,21 +225,25 @@ Object.defineProperty(Arr.prototype, "deepMap", {
     value : function(fn, index, size) {
         size = size === undefined ? this.shape : size
         index = index === undefined ? [] : index
-        let arr = []
-        if(size.length-1 === index.length) {
-            index.push(0)
-            for(let i = 0; i < size[index.length-1]; i++) {
-                arr.push(fn(this[i], index.slice()))
-                index[index.length-1] += 1
+        index.push(0)
+        if(size.length === 1) {
+            let result = []
+            for(let i = 0; i < this.length; i++) {
+                index[index.length-1] = i
+                result.push(fn(this[i], index.slice()))
             }
-            index.pop()
-        } else {
-            for(let i = 0; i < size[index.length]; i++) {
-                arr.push(this[i].deepMap(fn, index.concat(i), size))
-            }
+            Object.setPrototypeOf(result, Arr.prototype)
+            return result
         }
-        Object.setPrototypeOf(arr, Arr.prototype)
-        return arr
+
+        let result = []
+        let length = size.shift()
+        for(let i = 0; i < length; i++) {
+            index[index.length-1] = i
+            result.push(this[i].deepMap(fn, index.slice(), size))
+        }
+        Object.setPrototypeOf(result, Arr.prototype)
+        return result
     }
 })
 
@@ -368,33 +389,43 @@ Object.defineProperty(Arr.prototype, "broadcast", {
         shape = arguments.length === 1 
         ? (Array.isArray(shape) ? shape : Array.of(shape)) 
         : Array.from(arguments)
-        let size = this.shape.reverse()
+
+        let size = this.shape
+        if(size.same(shape)) {
+            return this
+        }
+
+        size = size.reverse()
         shape = shape.slice().reverse()
         let temp = this
         for(let i = 0; i < shape.length; i++) {
             if(size[i] === undefined) {
                 temp = [temp]
+                Object.setPrototypeOf(temp, Arr.prototype)
             } else if(size[i] !== 1 && size[i] !== shape[i]) {
                 throw new Error("크기가 맞지 않습니다.")
             }
         }
-        return Arr(deepCopy(Arr.deepArr(temp)._broadcast(shape.reverse())))
+        return Arr(temp._broadcast(shape.reverse()))
     }
 })
 
 Object.defineProperty(Arr.prototype, "_broadcast", {
     value : function(shape) {
         if(shape.length === 1) {
-            return this.length === 1 ? Arr(Array(shape[0]).fill(this[0])) : this
+            return this.length === 1 ? Array(shape[0]).fill(this[0]) : this
         }
         let a = shape.shift()
-        let temp = this.map(v => v._broadcast(shape.slice()))
+        let temp = []
+        for(let i = 0; i < this.length; i++) {
+            temp.push(this[i]._broadcast(shape.slice()))
+        }
         if(a === temp.length) {
             return temp
         }
         let arr = []
         for(let i = 0; i < a; i++) {
-            arr.push(temp[0])
+            arr.push(deepCopy(temp[0]))
         }
         return arr
     }
@@ -648,6 +679,12 @@ Object.defineProperty(Arr.prototype, "max", {
     }
 })
 
+Object.defineProperty(Arr.prototype, "argmax", {
+    value : function(axis, keepdims) {
+        return this.calaxis(axis, v => v.indexOf(Math.max.apply(null, v)), keepdims)
+    }
+})
+
 Object.defineProperty(Arr.prototype, "min", {
     value : function(axis, keepdims) {
         return this.calaxis(axis, v => Math.min.apply(null, v), keepdims, true)
@@ -803,7 +840,7 @@ Object.defineProperty(Arr.prototype, "matmul", {
 Object.defineProperty(Arr.prototype, "shuffle", {
     value : function() {
         let arr = this.slice()
-        const result = Array(arr.length)
+        const result = Arr.zeros(arr.length)
         for(let i = arr.length-1; i >= 0 ; i--) {
             let j = Math.random() * (i+1) | 0
             result[i] = arr[j]
