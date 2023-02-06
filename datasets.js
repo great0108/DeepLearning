@@ -11,20 +11,26 @@
         this.prepare()
     }
 
-    Dataset.prototype.slice = function(start, end) {
+    Dataset.prototype.getItem = function() {
+        let a = Array.from(arguments)
+        let method = a.shift()
         if(this.label === null) {
-            return [this.transform(this.data.slice(start, end)), null]
+            return [this.transform(this.data[method].apply(this.data, a)), null]
         } else {
-            return [this.transform(this.data.slice(start, end)), this.target_transform(this.label.slice(start, end))]
+            return [this.transform(this.data[method].apply(this.data, a)), this.target_transform(this.label[method].apply(this.label, a))]
         }
     }
 
+    Dataset.prototype.select = function(indexs) {
+        return this.getItem("select", indexs)
+    }
+
+    Dataset.prototype.slice = function(start, end) {
+        return this.slice("slice", start, end)
+    }
+
     Dataset.prototype.get = function(index) {
-        if(this.label === null) {
-            return [this.transform(this.data.get(index)), null]
-        } else {
-            return [this.transform(this.data.get(index)), this.target_transform(this.label.get(index))]
-        }
+        return this.get("get", index)
     }
 
     Object.defineProperty(Dataset.prototype, "length", {

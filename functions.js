@@ -1,7 +1,7 @@
 (function() {
     "use strict"
     const Arr = require("./Arr")
-    const {Operation, Variable, List, sum_to} = require("./core")
+    const {Operation, Variable, List, sum_to, as_variable, as_array} = require("./core")
     const utils = require("./utils")
 
     function Sin() {
@@ -282,6 +282,17 @@
         return SoftmaxCrossEntropy()(x, t)
     }
 
+    
+    function accuracy(y, t) {
+        y = as_variable(y)
+        t = as_variable(t)
+
+        let pred = y.data.calaxis(1, v => v.indexOf(Math.max.apply(null, v))).reshape(t.shape)
+        let result = pred.cal(t.data, (a, b) => a === b)
+        let acc = result.sum().div(result.length)
+        return as_variable(as_array(acc))
+    }
+
 
     module.exports = {
         sin : sin,
@@ -294,6 +305,7 @@
         sigmoid : sigmoid,
         softmax : softmax,
         mean_squared_error : mean_squared_error,
-        softmax_cross_entropy : softmax_cross_entropy
+        softmax_cross_entropy : softmax_cross_entropy,
+        accuracy : accuracy
     }
 })()
