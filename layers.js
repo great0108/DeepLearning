@@ -10,7 +10,7 @@
         result._params = new Set()
         return result
     }
-
+    
     Layer.inherit = Callable.inherit
 
     Layer.prototype.set = function(name, value) {
