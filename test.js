@@ -8,17 +8,17 @@ const {Spiral, Mnist} = require("./datasets")
 const {DataLoader} = require("./dataloaders")
 const utils = require("./utils")
 
-let max_epoch = 10
-let batch_size = 200
-let hidden_size = 100
-let lr = 0.01
+let max_epoch = 100
+let batch_size = 20
+let hidden_size = 10
+let lr = 0.1
 
-let train_set = new Mnist(true)
-let test_set = new Mnist(false)
+let train_set = new Spiral(true)
+let test_set = new Spiral(false)
 let train_loader = new DataLoader(train_set, batch_size)
 let test_loader = new DataLoader(test_set, batch_size, false)
 
-let model = MLP([hidden_size, 10])
+let model = MLP([hidden_size, 3])
 let optimizer = Adam(lr).setup(model)
 
 console.log("train start")
@@ -44,7 +44,7 @@ for(let epoch = 0; epoch < max_epoch; epoch++) {
 
     let avg_loss = sum_loss / train_set.length
     let avg_acc = sum_acc / train_set.length
-    if((epoch+1) % 1 === 0) {
+    if((epoch+1) % 20 === 0) {
         console.log("epoch : " + (epoch+1) + "  loss : " + avg_loss + "  accuracy : " + avg_acc)
         sum_loss = 0
         sum_acc = 0
@@ -63,3 +63,4 @@ for(let epoch = 0; epoch < max_epoch; epoch++) {
         console.log("test loss : " + avg_loss + "  test accuracy : " + avg_acc)
     }
 }
+model.save_weights("test.json")

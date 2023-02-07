@@ -70,12 +70,26 @@
         return shape
     }
 
-    function read_csv(url) {
+    function read_csv(path) {
         const fs = require("fs")
-        const csv = fs.readFileSync(url, "utf-8")
+        const csv = fs.readFileSync(path, "utf-8")
         const rows = csv.split("\n")
         const result = rows.map(v => v.split(","))
         return Arr(result)
+    }
+
+    function read_json(path) {
+        const fs = require("fs")
+        let json = fs.readFileSync(path, "utf-8")
+        json = JSON.parse(json)
+        Object.keys(json).forEach(key => json[key] = Arr(json[key]))
+        return json
+    }
+
+    function write_json(path, json) {
+        const fs = require("fs")
+        json = JSON.stringify(json)
+        fs.writeFileSync(path, json, "utf-8")
     }
 
     module.exports = {
@@ -83,6 +97,8 @@
         sum_to : sum_to,
         logsumexp : logsumexp,
         max_backward_shape : max_backward_shape,
-        read_csv : read_csv
+        read_csv : read_csv,
+        read_json : read_json,
+        write_json : write_json
     }
 })()

@@ -4,6 +4,7 @@
     const {Parameter, List} = require("./core")
     const F = require("./functions")
     const Callable = require("./Callable")
+    const utils = require("./utils")
 
     function Layer() {
         let result = Callable.inherit(Layer)
@@ -52,6 +53,41 @@
     Layer.prototype.cleargrads = function() {
         for(let param of this.params()) {
             param.cleargrad()
+        }
+    }
+
+    Layer.prototype._flatten_params = function(param_dict, parent_key) {
+        parent_key = parent_key === undefined ? "" : parent_key
+        for(let name of this._params) {
+            let obj = this[name]
+            let key = parent_key ? parent_key + "/" + name : name
+
+            if(obj instanceof Layer) {
+                obj._flatten_params(param_dict, key)
+            } else {
+                param_dict[key] = obj
+            }
+        }
+    }
+
+    Layer.prototype.save_weights = function(path) {
+        let param_dict = {}
+        this._flatten_params(param_dict)
+        let array_dict = {}
+        for(let key of Object.keys(param_dict)) {
+            array_dict[key] = param_dict[key] === null ? null : param_dict[key].data
+        }
+
+        utils.write_json(path, array_dict)
+    }
+
+    Layer.prototype.load_weights = function(path) {
+        let array_dict = utils.read_json(path)
+        let param_dict = {}
+        this._flatten_params(param_dict)
+
+        for(let key of Object.keys(param_dict)) {
+            param_dict[key].data = array_dict[key]
         }
     }
 
