@@ -77,7 +77,7 @@
             const fs = require("fs")
             csv = fs.readFileSync(path, "utf-8")
         } else {
-            csv = FileStream.read(path)
+            csv = FileStream.read(setting.module_path + path)
         }
         const rows = csv.split("\n")
         const result = rows.map(v => v.split(","))
@@ -90,7 +90,7 @@
             const fs = require("fs")
             json = fs.readFileSync(path, "utf-8")
         } else {
-            json = FileStream.read(path)
+            json = FileStream.read(setting.module_path + path)
         }
         json = JSON.parse(json)
         Object.keys(json).forEach(key => json[key] = Arr(json[key]))
@@ -103,7 +103,7 @@
             const fs = require("fs")
             fs.writeFileSync(path, json, "utf-8")
         } else {
-            FileStream.write(path, json)
+            FileStream.write(setting.module_path + path, json)
         }
     }
 
