@@ -1,6 +1,7 @@
 (function() {
     "use strict"
     const Arr = require("./Arr")
+    const setting = require("./setting")
 
     function reshape_sum_backward(gy, x_shape, axis, keepdims) {
         let ndim = x_shape.length
@@ -71,25 +72,39 @@
     }
 
     function read_csv(path) {
-        const fs = require("fs")
-        const csv = fs.readFileSync(path, "utf-8")
+        let csv = null
+        if(setting.nodeJS) {
+            const fs = require("fs")
+            csv = fs.readFileSync(path, "utf-8")
+        } else {
+            csv = FileStream.read(path)
+        }
         const rows = csv.split("\n")
         const result = rows.map(v => v.split(","))
         return Arr(result)
     }
 
     function read_json(path) {
-        const fs = require("fs")
-        let json = fs.readFileSync(path, "utf-8")
+        let json = null
+        if(setting.nodeJS) {
+            const fs = require("fs")
+            json = fs.readFileSync(path, "utf-8")
+        } else {
+            json = FileStream.read(path)
+        }
         json = JSON.parse(json)
         Object.keys(json).forEach(key => json[key] = Arr(json[key]))
         return json
     }
 
     function write_json(path, json) {
-        const fs = require("fs")
         json = JSON.stringify(json)
-        fs.writeFileSync(path, json, "utf-8")
+        if(setting.nodeJS) {
+            const fs = require("fs")
+            fs.writeFileSync(path, json, "utf-8")
+        } else {
+            FileStream.write(path, json)
+        }
     }
 
     module.exports = {
