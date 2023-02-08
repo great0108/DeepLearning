@@ -1,7 +1,7 @@
 (function() {
     "use strict"
     const Arr = require("./Arr")
-    const {Operation, Variable, List, sum_to, as_variable, as_array} = require("./core")
+    const {Operation, Variable, List, Config, sum_to, as_variable, as_array} = require("./core")
     const utils = require("./utils")
 
     function Sin() {
@@ -293,6 +293,19 @@
         return as_variable(as_array(acc))
     }
 
+    function dropout(x, dropout_ratio) {
+        dropout_ratio = dropout_ratio === undefined ? 0.5 : dropout_ratio
+        x = as_variable(x)
+
+        if(Config.train) {
+            let scale = 1 - dropout_ratio
+            let y = x.deepMap(v => (Math.random() > dropout_ratio) * v / scale)
+            return y
+        } else {
+            return x
+        }
+    }
+
 
     module.exports = {
         sin : sin,
@@ -306,6 +319,7 @@
         softmax : softmax,
         mean_squared_error : mean_squared_error,
         softmax_cross_entropy : softmax_cross_entropy,
-        accuracy : accuracy
+        accuracy : accuracy,
+        dropout : dropout
     }
 })()

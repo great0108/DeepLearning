@@ -13,7 +13,8 @@
 
 
     const Config = {
-        "enable_backprop" : true
+        "enable_backprop" : true,
+        "train" : true
     }
 
     function using_config(name, value, callback) {
@@ -28,6 +29,10 @@
 
     function no_grad(callback) {
         using_config("enable_backprop", false, callback)
+    }
+
+    function test_mode(callback) {
+        using_config("train", false, callback)
     }
 
 
@@ -142,10 +147,12 @@
 
     Variable.prototype.deepMap = function(fn) {
         this.data = this.data.deepMap(fn)
+        return this
     }
 
     Variable.prototype.flat = function(n) {
         this.data = this.data.flat(n)
+        return this
     }
 
     Variable.prototype.reshape = function(shape) {
@@ -637,11 +644,11 @@
         Parameter : Parameter,
         Operation : Operation,
         List : List,
+        Config : Config,
         as_array : as_array,
         as_variable : as_variable,
         no_grad : no_grad,
-        sum : sum,
-        sum_to : sum_to,
-        broadcast_to : broadcast_to
+        test_mode : test_mode,
+        sum_to : sum_to
     }
 })()
