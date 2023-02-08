@@ -7,6 +7,8 @@ const Arr = require("./Arr")
 const {Spiral, Mnist} = require("./datasets")
 const {DataLoader} = require("./dataloaders")
 const utils = require("./utils")
+const setting = require("./setting")
+
 
 let max_epoch = 5
 let batch_size = 200
@@ -61,6 +63,3 @@ for(let epoch = 0; epoch < max_epoch; epoch++) {
     }
 }
 model.save_weights("test.json")
-
-let model2 = MLP([hidden_size, 10])
-model2.load_weights("test.json")
