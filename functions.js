@@ -137,6 +137,69 @@
     }
 
 
+    function Conv2d(stride, pad) {
+        let result = Operation.inherit(Conv2d)
+        result.stride = utils.pair(stride === undefined ? 1 : stride)
+        result.pad = utils.pair(pad === undefined ? 0 : pad)
+        return result
+    }
+
+    Conv2d.prototype.__proto__ = Operation.prototype
+
+    Conv2d.prototype.forward = function(x, W, b) {
+        let [KH, KW] = W.shape.slice(2)
+        let col = im2col_array(x, [KH, KW], this.stride, this.pad, false)
+
+        
+    }
+
+
+    function Im2col(kernel_size, stride, pad, to_matrix) {
+        let result = Operation.inherit(Im2col)
+        result.input_shape = null
+        result.kernel_size = kernel_size
+        result.stride = stride
+        result.pad = pad
+        result.to_matrix = to_matrix
+        return result
+    }
+
+    Im2col.prototype.__proto__ = Operation.prototype
+
+    Im2col.prototype.forward = function(x) {
+        this.input_shape = x.shape
+        let y = im2col_array(x, this.kernel_size, this.stride, this.pad, this.to_matrix)
+        return y
+    }
+
+    Im2col.prototype.backward = function(gy) {
+        let gx = col2im(gy, this.input_shape, this.kernel_size, this.stride, this.pad, this.to_matrix)
+        return gx
+    }
+
+
+    function Col2im(input_shape, kernel_size, stride, pad, to_matrix) {
+        let result = Operation.inherit(Col2im)
+        result.input_shape = input_shape
+        result.kernel_size = kernel_size
+        result.stride = stride
+        result.pad = pad
+        result.to_matrix = to_matrix
+    }
+
+    Col2im.prototype.__proto__ = Operation.prototype
+
+    Col2im.prototype.forward = function(x) {
+        let y = col2im_array(this.input_shape, this.kernel_size, this.stride, this.pad, this.to_matrix)
+        return y
+    }
+
+    Col2im.prototype.backward = function(gy) {
+        let gx = im2col(gy, this.kernel_size, this.stride, this.pad, this.to_matrix)
+        return gx
+    }
+
+
     function Sigmoid() {
         return Operation.inherit(Sigmoid)
     }
@@ -266,6 +329,20 @@
         return Linear()(x, W, b)
     }
 
+    function im2col(x, kernel_size, stride, pad, to_matrix) {
+        stride = stride === undefined ? 1 : stride
+        pad = pad === undefined ? 0 : pad
+        to_matrix = to_matrix === undefined ? true : to_matrix
+        return Im2col(kernel_size, stride, pad, to_matrix)(x)
+    }
+
+    function col2im(x, input_shape, kernel_size, stride, pad, to_matrix) {
+        stride = stride === undefined ? 1 : stride
+        pad = pad === undefined ? 0 : pad
+        to_matrix = to_matrix === undefined ? true : to_matrix
+        return Col2im(input_shape, kernel_size, stride, pad, to_matrix)(x)
+    }
+
     function sigmoid(x) {
         return Sigmoid()(x)
     }
@@ -306,6 +383,96 @@
         }
     }
 
+    function conv2d_simple(x, W, b, stride, pad) {
+        b = b === undefined ? null : b
+        stride = stride === undefined ? 1 : stride
+        pad = pad === undefined ? 0 : pad
+
+        x = as_variable(x)
+        let Weight = as_variable(W)
+        let [N, _, H, a] = x.shape
+        W = a
+        let [OC, C, KH, KW] = Weight.shape
+        let [SH, SW] = utils.pair(stride)
+        let [PH, PW] = utils.pair(pad)
+        let OH = utils.get_conv_outsize(H, KH, SH, PH)
+        let OW = utils.get_conv_outsize(W, KW, SW, PW)
+
+        let col = im2col(x, [KH, KW], stride, pad, true)
+        Weight = W.reshape(OC, -1).transpose()
+        let t = linear(col, Weight, b)
+        let y = t.reshape(N, OH, OW, OC).transpose(0, 3, 1, 2)
+        return y
+    }
+
+    function im2col_array(img, kernel_size, stride, pad, to_matrix) {
+        to_matrix = to_matrix === undefined ? true : to_matrix
+        let [N, C, H, W] = img.shape
+        let [KH, KW] = utils.pair(kernel_size)
+        let [SH, SW] = utils.pair(stride)
+        let [PH, PW] = utils.pair(pad)
+        let OH = utils.get_conv_outsize(H, KH, SH, PH)
+        let OW = utils.get_conv_outsize(W, KW, SW, PW)
+
+        for(let i = 0; i < N; i++) {
+            for(let j = 0; j < C; j++) {
+                let temp = Arr.zeros(H + PH*2 + SH - 1, W + PW*2 + SW - 1)
+                temp.overlap(img[i][j], [PH, PW], [H+PH, W+PW])
+                img[i][j] = temp
+            }
+        }
+        let col = Arr.zeros(N, C, KH, KW, OH, OW)
+
+        for(let j = 0; j < KH; j++) {
+            let j_lim = j + SH * OH
+            for(let i = 0; i < KW; i++) {
+                let i_lim = i + SH * OW
+                for(let k = 0; k < N; k++) {
+                    for(let l = 0; l < C; l++) {
+                        let temp = img[k][l].slice([j, i], [j_lim, i_lim])
+                        temp = temp.filter((_, i) => i%SH === 0)
+                        col[k][l][j][i] = temp.map(v => v.filter((_, i) => i%SW === 0))
+                    }
+                }
+            }
+        }
+
+        if(to_matrix) {
+            col = col.transpose(0, 4, 5, 1, 2, 3).reshape(N * OH * OW, -1)
+        }
+        return col
+    }
+
+    function col2im_array(col, img_shape, kernel_size, stride, pad, to_matrix) {
+        to_matrix = to_matrix === undefined ? true : to_matrix
+        let [N, C, H, W] = img_shape
+        let [KH, KW] = utils.pair(kernel_size)
+        let [SH, SW] = utils.pair(stride)
+        let [PH, PW] = utils.pair(pad)
+        let OH = utils.get_conv_outsize(H, KH, SH, PH)
+        let OW = utils.get_conv_outsize(W, KW< SW, PW)
+
+        if(to_matrix) {
+            col = col.reshape(N, OH, OW, C, KH, KW).transpose(0, 3, 4, 5, 1, 2)
+        }
+
+        let img = np.zeros(N, C, H + PH*2 + SH - 1, W + PW*2 + SW - 1)
+        for(let j = 0; j < KH; j++) {
+            for(let i = 0; i < KW; i++) {
+                for(let k = 0; k < N; k++) {
+                    for(let l = 0; l < C; l++) {
+                        for(let m = 0; m < OH; m++) {
+                            for(let n = 0; n < OW; n++) {
+                                img[k][l][j+m*SH][i+n*SW] += col[k][l][j][i][m][n]
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return img.slice([0, 0, PH, PW], [N, C, H + PH, W + PW])
+    }
+
 
     module.exports = {
         sin : sin,
@@ -320,6 +487,7 @@
         mean_squared_error : mean_squared_error,
         softmax_cross_entropy : softmax_cross_entropy,
         accuracy : accuracy,
-        dropout : dropout
+        dropout : dropout,
+        conv2d_simple : conv2d_simple
     }
 })()

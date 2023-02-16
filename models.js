@@ -5,16 +5,18 @@
     const {Layer, Linear} = require("./layers")
 
     function MLP(fc_output_sizes, activation) {
-        let result = Layer.inherit(MLP)
-        result.activation = activation === undefined ? F.sigmoid : activation
-        result.layers = []
+        if(!(this instanceof MLP)) {
+            return new MLP(fc_output_sizes, activation)
+        }
+        this.activation = activation === undefined ? F.sigmoid : activation
+        this.layers = []
 
         for(let i = 0; i < fc_output_sizes.length; i++) {
             let layer = Linear(fc_output_sizes[i])
-            result.set("l"+i, layer)
-            result.layers.push(layer)
+            this["l"+i] = layer
+            this.layers.push(layer)
         }
-        return result
+        return this.make(this)
     }
 
     MLP.prototype.__proto__ = Layer.prototype

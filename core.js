@@ -145,8 +145,12 @@
         }
     }
 
+    Variable.prototype.copy = function() {
+        
+    }
+
     Variable.prototype.deepMap = function(fn) {
-        this.data = this.data.deepMap(fn)
+        let data = this.data.deepMap(fn)
         return this
     }
 

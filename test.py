@@ -685,12 +685,5 @@ class Layer:
             param.cleargrad()
 
 
-import pandas as pd
-image = pd.read_csv('./mnist_csv/csv_image.csv', encoding='cp949', header=None)
-label = pd.read_csv('./mnist_csv/csv_label.csv', encoding='cp949', header=None)
-print(image.head(1))
-print(label.head(1))
-image_array = np.array(image, dtype='f')
-label_array = np.array(label, dtype='f')
-print(image_array.shape)
-print(label_array.shape)
+a = [1,2,3,4,5]
+print(a[1:4:2])

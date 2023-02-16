@@ -70,6 +70,9 @@
 
 
     function Spiral() {
+        if(!(this instanceof Spiral)) {
+            return new Spiral()
+        }
         Dataset.apply(this, Array.from(arguments))
     }
 
@@ -83,6 +86,9 @@
 
 
     function Mnist(train, transform, target_transform) {
+        if(!(this instanceof Mnist)) {
+            return new Mnist(train, transform, target_transform)
+        }
         transform = transform === undefined ? a => a.deepMap(v => Number(v) / 255) : transform
         target_transform = target_transform === undefined ? a => a.deepMap(v => Number(v)).argmax(1) : target_transform
         Dataset.call(this, train, transform, target_transform)

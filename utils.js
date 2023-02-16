@@ -55,7 +55,7 @@
     function max_backward_shape(x, axis) {
         if(axis === null) {
             axis = Arr.range(x.ndim)
-        } else if(!isNaN(axis)) {
+        } else if(!Number.isNaN(axis)) {
             axis = [axis]
         }
 
@@ -69,6 +69,22 @@
             }
         }
         return shape
+    }
+
+    function get_conv_outsize(input_size, kernel_size, stride, pad) {
+        return Math.floor((input_size + pad * 2 - kernel_size) / stride) + 1
+    }
+
+    function pair(x) {
+        if(!Number.isNaN(x)) {
+            return [x, x]
+        } else if(Array.isArray(x)) {
+            if(x.length != 2) {
+                throw new Error("배열의 길이가 2가 아닙니다.")
+            }
+            return x
+        }
+        throw new Error("잘못된 값이 들어왔습니다.")
     }
 
     function read_csv(path) {
@@ -112,6 +128,8 @@
         sum_to : sum_to,
         logsumexp : logsumexp,
         max_backward_shape : max_backward_shape,
+        get_conv_outsize : get_conv_outsize,
+        pair : pair,
         read_csv : read_csv,
         read_json : read_json,
         write_json : write_json

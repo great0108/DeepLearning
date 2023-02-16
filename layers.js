@@ -91,23 +91,32 @@
         }
     }
 
+    Layer.prototype.make = function(obj) {
+        let result = Layer.inherit(obj.constructor)
+        for(let key of Object.getOwnPropertyNames(obj)) {
+            result.set(key, obj[key])
+        }
+        return result
+    }
+
 
     function Linear(out_size, nobias, in_size) {
-        let result = Layer.inherit(Linear)
-        result.in_size = in_size
-        result.out_size = out_size
-        result.set("W", new Parameter(null, "W"))
-
-        if(result.in_size !== undefined) {
-            result._init_W()
+        if(!(this instanceof Linear)) {
+            return new Linear(out_size, nobias, in_size)
+        }
+        this.in_size = in_size
+        this.out_size = out_size
+        this.W = new Parameter(null, "W")
+        if(in_size !== undefined) {
+            this._init_W()
         }
 
         if(nobias) {
-            result.b = null
+            this.b = null
         } else {
-            result.set("b", new Parameter(Arr.zeros(result.out_size), "b"))
+            this.b = new Parameter(Arr.zeros(out_size), "b")
         }
-        return result
+        return this.make(this)
     }
 
     Linear.prototype.__proto__ = Layer.prototype
@@ -127,8 +136,53 @@
         return y
     }
 
+
+    function Conv2d(out_channels, kernel_size, stride, pad, nobias, in_channels) {
+        if(!(this instanceof Linear)) {
+            return new Linear(out_size, nobias, in_size)
+        }
+        this.in_channels = in_channels
+        this.out_channels = out_channels
+        this.kernel_size = kernel_size
+        this.stride = stride === undefined ? 1 : stride
+        this.pad = pad === undefined ? 0 : pad
+
+        this.W = new Parameter(null, "W")
+        if(in_channels !== undefined) {
+            this._init_W()
+        }
+
+        if(nobias) {
+            this.b = null
+        } else {
+            this.b = new Parameter(Arr.zeros(out_channels), "b")
+        }
+        return this.make(this)
+    }
+
+    Conv2d.prototype.__proto__ = Layer.prototype
+
+    Conv2d.prototype._init_W = function() {
+        let C = this.in_channels
+        let OC = this.out_channels
+        let [KH, KW] = utils.pair(this.kernel_size)
+        let scale = Math.sqrt(1 / (C * KH * KW))
+        let W_data = Arr.rand(OC, C, KH, KW).mul(scale)
+        this.W.data = W_data
+    }
+
+    Conv2d.prototype.forward = function(x) {
+        if(this.W.data === null) {
+            this.in_channels = x.shape[1]
+            this._init_W()
+        }
+        let y = F.conv2d_simple(x, this.W, this.b, this.stride, this.pad)
+        return y
+    }
+
     module.exports = {
         Layer : Layer,
-        Linear : Linear
+        Linear : Linear,
+        Conv2d : Conv2d
     }
 })()
