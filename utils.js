@@ -55,7 +55,7 @@
     function max_backward_shape(x, axis) {
         if(axis === null) {
             axis = Arr.range(x.ndim)
-        } else if(!Number.isNaN(axis)) {
+        } else if(typeof axis === "number") {
             axis = [axis]
         }
 
@@ -76,7 +76,7 @@
     }
 
     function pair(x) {
-        if(!Number.isNaN(x)) {
+        if(typeof x === "number") {
             return [x, x]
         } else if(Array.isArray(x)) {
             if(x.length != 2) {

@@ -8,7 +8,8 @@ function deepCopy(target) {
         for(let i = 0; i < target.length; i++) {
             result.push(deepCopy(target[i]))
         }
-        return target
+        target = null
+        return result
     }
     if(typeof target === "object") {
         target = Object.assign({}, target)
@@ -20,22 +21,22 @@ function deepCopy(target) {
 }
 
 function Arr(arr) {
-    let result
     if(arr instanceof Arr) {
-        result = arr.copy()
+        arr = arr.copy()
     } else if(arguments.length > 1) {
-        result = Array.from(arguments)
+        arr = Array.from(arguments)
     } else {
-        result = Array.isArray(arr) ? Arr.copy(arr) : (arr !== undefined ? Array.of(arr) : [])
+        arr = Array.isArray(arr) ? Arr.copy(arr) : (arr !== undefined ? Array.of(arr) : [])
     }
-    Object.setPrototypeOf(result, Arr.prototype)
-    return result
+    Object.setPrototypeOf(arr, Arr.prototype)
+    return arr
 }
 
 Arr.prototype.__proto__ = Array.prototype
 
 Arr.fill = function(size, value) {
     size = Array.isArray(size) ? size : Array.of(size)
+    size = size.slice()
     if(Array.isArray(value)) {
         value = Arr(value)
         let a = value.shape
@@ -104,7 +105,11 @@ Arr.calShape = function(arr1, arr2) {
 
 Arr.deepArr = function(arr) {
     if(Array.isArray(arr)) {
-        let result = arr.map(v => Arr.deepArr(v))
+        let result = []
+        for(let i = 0; i < arr.length; i++) {
+            result.push(Arr.deepArr(arr[i]))
+        }
+        arr = null
         Object.setPrototypeOf(result, Arr.prototype)
         return result
     }
@@ -212,7 +217,6 @@ Object.defineProperty(Arr.prototype, "deepFor", {
                 fn(this[i], index.slice())
                 index[index.length-1] += 1
             }
-            index.pop()
         } else {
             for(let i = 0; i < size[index.length]; i++) {
                 this[i].deepFor(fn, index.concat(i), size)
@@ -240,7 +244,7 @@ Object.defineProperty(Arr.prototype, "deepMap", {
         let length = size.shift()
         for(let i = 0; i < length; i++) {
             index[index.length-1] = i
-            result.push(this[i].deepMap(fn, index.slice(), size))
+            result.push(this[i].deepMap(fn, index.slice(), size.slice()))
         }
         Object.setPrototypeOf(result, Arr.prototype)
         return result
@@ -517,13 +521,21 @@ Object.defineProperty(Arr.prototype, "_view", {
 Object.defineProperty(Arr.prototype, "flat", {
     value : function(deep) {
         deep = deep === undefined ? 100 : deep
+        let result = []
         let temp = this
-        for(let i = 0; i < deep; i++) {
-            temp = temp.concat.apply([], temp)
-            if(temp.every(v => !Array.isArray(v))) {
+        for(let i = 0; i < deep+1; i++) {
+            if(!Array.isArray(temp[0])) {
                 break
             }
+            result = []
+            for(let j = 0; j < temp.length; j++) {
+                for(let k = 0; k < temp[j].length; k++) {
+                    result.push(temp[j][k])
+                }
+            }
+            temp = result
         }
+        result = null
         return Arr.copy(temp)
     }
 })
@@ -551,13 +563,16 @@ Object.defineProperty(Arr.prototype, "reshape", {
         result.deepFor((v, i) => {
             result.set(i, temp[index])
             index += 1
-        })
+        }, [], size)
         return result
     }
 })
 
 Object.defineProperty(Arr.prototype, "swapaxis", {
     value : function(axis1, axis2) {
+        if(axis1 === axis2) {
+            return this
+        }
         let size = this.shape
         axis1 = axis1 >= 0 ? axis1 : size.length + axis1
         axis2 = axis2 >= 0 ? axis2 : size.length + axis2
@@ -566,24 +581,24 @@ Object.defineProperty(Arr.prototype, "swapaxis", {
         } else if(axis2 >= size.length || axis2 < 0) {
             throw new Error("차원이 배열을 벗어났습니다.")
         }
-        let temp = size[axis1]
-        size[axis1] = size[axis2]
-        size[axis2] = temp
+        let size2 = size.slice()
+        size2[axis1] = size[axis2]
+        size2[axis2] = size[axis1]
     
-        let result = Arr.zeros(size)
+        let result = Arr.zeros(size2)
         this.deepFor((v, i) => {
             let temp = i[axis1]
             i[axis1] = i[axis2]
             i[axis2] = temp
             result.set(i, v)
-        })
+        }, [], size)
         return result
     }
 })
 
 Object.defineProperty(Arr.prototype, "transpose", {
     value : function(axis) {
-        if(!axis) {
+        if(axis === undefined) {
             return this.T
         }
 
@@ -606,6 +621,7 @@ Object.defineProperty(Arr.prototype, "transpose", {
         let result = this
         for(let i = 0; i < size.length; i++) {
             result = result.swapaxis(i, axis[i])
+            axis[axis.indexOf(i)] = axis[i]
         }
         return result
     }
@@ -777,7 +793,7 @@ Object.defineProperty(Arr.prototype, "select", {
 
 Object.defineProperty(Arr.prototype, "_matmul", {
     value : function(arr, shape1, shape2) {
-        let result = Arr.zeros([shape1[0], shape2[1]])
+        let result = Arr.zeros(shape1[0], shape2[1])
         let temp = null
         for(let k = 0; k < shape1[1]; k++) {
             for(let i = 0; i < shape1[0]; i++) {
@@ -787,6 +803,8 @@ Object.defineProperty(Arr.prototype, "_matmul", {
                 }
             }
         }
+        arr = null
+        temp = null
         return result
     }
 })

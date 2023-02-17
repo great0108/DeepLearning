@@ -138,8 +138,8 @@
 
 
     function Conv2d(out_channels, kernel_size, stride, pad, nobias, in_channels) {
-        if(!(this instanceof Linear)) {
-            return new Linear(out_size, nobias, in_size)
+        if(!(this instanceof Conv2d)) {
+            return new Conv2d(out_channels, kernel_size, stride, pad, nobias, in_channels)
         }
         this.in_channels = in_channels
         this.out_channels = out_channels

@@ -185,12 +185,13 @@
         result.stride = stride
         result.pad = pad
         result.to_matrix = to_matrix
+        return result
     }
 
     Col2im.prototype.__proto__ = Operation.prototype
 
     Col2im.prototype.forward = function(x) {
-        let y = col2im_array(this.input_shape, this.kernel_size, this.stride, this.pad, this.to_matrix)
+        let y = col2im_array(x, this.input_shape, this.kernel_size, this.stride, this.pad, this.to_matrix)
         return y
     }
 
@@ -214,6 +215,25 @@
     Sigmoid.prototype.backward = function(gy) {
         let y = this.outputs[0]
         let gx = gy.mul(y).mul(y.rminus(1))
+        return gx
+    }
+
+
+    function ReLU() {
+        return Operation.inherit(ReLU)
+    }
+
+    ReLU.prototype.__proto__ = Operation.prototype
+
+    ReLU.prototype.forward = function(x) {
+        let y = x.deepMap(v => Math.max(v, 0))
+        return y
+    }
+
+    ReLU.prototype.backward = function(gy) {
+        let [x] = this.inputs
+        let mask = x.data.deepMap(v => Number(v > 0))
+        let gx = gy.mul(mask)
         return gx
     }
 
@@ -347,6 +367,10 @@
         return Sigmoid()(x)
     }
 
+    function relu(x) {
+        return ReLU()(x)
+    }
+
     function softmax(x, axis) {
         return Softmax(axis)(x)
     }
@@ -357,6 +381,10 @@
 
     function softmax_cross_entropy(x, t) {
         return SoftmaxCrossEntropy()(x, t)
+    }
+
+    function flatten(x) {
+        return x.reshape(x.shape[0], -1)
     }
 
     
@@ -387,9 +415,9 @@
         b = b === undefined ? null : b
         stride = stride === undefined ? 1 : stride
         pad = pad === undefined ? 0 : pad
-
         x = as_variable(x)
         let Weight = as_variable(W)
+
         let [N, _, H, a] = x.shape
         W = a
         let [OC, C, KH, KW] = Weight.shape
@@ -399,9 +427,28 @@
         let OW = utils.get_conv_outsize(W, KW, SW, PW)
 
         let col = im2col(x, [KH, KW], stride, pad, true)
-        Weight = W.reshape(OC, -1).transpose()
+        Weight = Weight.reshape(OC, -1).transpose()
         let t = linear(col, Weight, b)
         let y = t.reshape(N, OH, OW, OC).transpose(0, 3, 1, 2)
+        return y
+    }
+
+    function polling_simple(x, kernel_size, stride, pad) {
+        stride = stride === undefined ? 1 : stride
+        pad = pad === undefined ? 0 : pad
+        x = as_variable(x)
+
+        let [N, C, H, W] = x.shape
+        let [KH, KW] = utils.pair(kernel_size)
+        let [SH, SW] = utils.pair(stride)
+        let [PH, PW] = utils.pair(pad)
+        let OH = utils.get_conv_outsize(H, KH, SH, PH)
+        let OW = utils.get_conv_outsize(W, KW, SW, PW)
+
+        let col = im2col(x, kernel_size, stride, pad, true)
+        col = col.reshape(-1, KH * KW)
+        let y = col.max(1)
+        y = y.reshape(N, OH, OW, C).transpose(0, 3, 1, 2)
         return y
     }
 
@@ -450,13 +497,12 @@
         let [SH, SW] = utils.pair(stride)
         let [PH, PW] = utils.pair(pad)
         let OH = utils.get_conv_outsize(H, KH, SH, PH)
-        let OW = utils.get_conv_outsize(W, KW< SW, PW)
+        let OW = utils.get_conv_outsize(W, KW, SW, PW)
 
         if(to_matrix) {
             col = col.reshape(N, OH, OW, C, KH, KW).transpose(0, 3, 4, 5, 1, 2)
         }
-
-        let img = np.zeros(N, C, H + PH*2 + SH - 1, W + PW*2 + SW - 1)
+        let img = Arr.zeros(N, C, H + PH*2 + SH - 1, W + PW*2 + SW - 1)
         for(let j = 0; j < KH; j++) {
             for(let i = 0; i < KW; i++) {
                 for(let k = 0; k < N; k++) {
@@ -483,11 +529,14 @@
         matmul : matmul,
         linear : linear,
         sigmoid : sigmoid,
+        relu : relu,
         softmax : softmax,
         mean_squared_error : mean_squared_error,
         softmax_cross_entropy : softmax_cross_entropy,
+        flatten : flatten,
         accuracy : accuracy,
         dropout : dropout,
-        conv2d_simple : conv2d_simple
+        conv2d_simple : conv2d_simple,
+        polling : polling_simple
     }
 })()

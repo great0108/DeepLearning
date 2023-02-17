@@ -145,18 +145,22 @@
         }
     }
 
-    Variable.prototype.copy = function() {
-        
+    Variable.prototype.copy = function(data) {
+        let result = new Variable(data, this.name)
+        result.grad = this.grad
+        result.creator = this.creator
+        result.generation = this.generation
+        return result
     }
 
     Variable.prototype.deepMap = function(fn) {
         let data = this.data.deepMap(fn)
-        return this
+        return this.copy(data)
     }
 
     Variable.prototype.flat = function(n) {
-        this.data = this.data.flat(n)
-        return this
+        let data = this.data.flat(n)
+        return this.copy(data)
     }
 
     Variable.prototype.reshape = function(shape) {
@@ -369,7 +373,7 @@
 
     function Transpose(axes) {
         let result = Operation.inherit(Transpose)
-        result.axes = axes === undefined ? null : axes
+        result.axes = axes
         return result
     }
 
@@ -381,7 +385,7 @@
     }
 
     Transpose.prototype.backward = function(gy) {
-        if(this.axes === null) {
+        if(this.axes === undefined) {
             return transpose(gy)
         }
 
@@ -471,14 +475,14 @@
     }
 
     Max.prototype.backward = function(gy) {
-        let x = this.inputs[o]
+        let x = this.inputs[0]
         let y = this.outputs[0]
 
         let shape = utils.max_backward_shape(x, this.axis)
         gy = reshape(gy, shape)
         y = reshape(y, shape)
-        let cond = x.data.cal(y.data, (a, b) => a === b)
-        gy = broadcast_to(g, x.shape)
+        let cond = x.data.cal(y.data, (a, b) => Number(a === b))
+        gy = broadcast_to(gy, cond.shape)
         return gy.mul(cond)
     }
 
