@@ -231,8 +231,8 @@
     }
 
     ReLU.prototype.backward = function(gy) {
-        let [x] = this.inputs
-        let mask = x.data.deepMap(v => Number(v > 0))
+        let x = this.inputs[0]
+        let mask = x.deepMap(v => Number(v > 0))
         let gx = gy.mul(mask)
         return gx
     }
@@ -461,13 +461,15 @@
         let OH = utils.get_conv_outsize(H, KH, SH, PH)
         let OW = utils.get_conv_outsize(W, KW, SW, PW)
 
+        let img2 = Arr.zeros(N, C)
         for(let i = 0; i < N; i++) {
             for(let j = 0; j < C; j++) {
                 let temp = Arr.zeros(H + PH*2 + SH - 1, W + PW*2 + SW - 1)
                 temp.overlap(img[i][j], [PH, PW], [H+PH, W+PW])
-                img[i][j] = temp
+                img2[i][j] = temp
             }
         }
+        img = null
         let col = Arr.zeros(N, C, KH, KW, OH, OW)
 
         for(let j = 0; j < KH; j++) {
@@ -476,13 +478,14 @@
                 let i_lim = i + SH * OW
                 for(let k = 0; k < N; k++) {
                     for(let l = 0; l < C; l++) {
-                        let temp = img[k][l].slice([j, i], [j_lim, i_lim])
+                        let temp = img2[k][l].slice([j, i], [j_lim, i_lim])
                         temp = temp.filter((_, i) => i%SH === 0)
                         col[k][l][j][i] = temp.map(v => v.filter((_, i) => i%SW === 0))
                     }
                 }
             }
         }
+        img2 = null
 
         if(to_matrix) {
             col = col.transpose(0, 4, 5, 1, 2, 3).reshape(N * OH * OW, -1)
@@ -502,6 +505,7 @@
         if(to_matrix) {
             col = col.reshape(N, OH, OW, C, KH, KW).transpose(0, 3, 4, 5, 1, 2)
         }
+
         let img = Arr.zeros(N, C, H + PH*2 + SH - 1, W + PW*2 + SW - 1)
         for(let j = 0; j < KH; j++) {
             for(let i = 0; i < KW; i++) {

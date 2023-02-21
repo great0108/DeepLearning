@@ -3,13 +3,13 @@
     const Arr = require("./Arr")
     const utils = require("./utils")
 
-    function Dataset(train, transform, target_transform) {
+    function Dataset(train, transform, target_transform, length) {
         this.train = train === undefined ? true : train
-        this.transform = transform === undefined ? a => a : transform
-        this.target_transform = target_transform === undefined ? a => a : target_transform
+        this.transform = !transform ? a => a : transform
+        this.target_transform = !target_transform ? a => a : target_transform
         this.data = null
         this.label = null
-        this.prepare()
+        this.prepare(length)
         this.data = this.transform(this.data)
         this.label = this.target_transform(this.label)
     }
@@ -85,18 +85,18 @@
     }
 
 
-    function Mnist(train, transform, target_transform) {
+    function Mnist(train, transform, target_transform, length) {
         if(!(this instanceof Mnist)) {
-            return new Mnist(train, transform, target_transform)
+            return new Mnist(train, transform, target_transform, length)
         }
-        transform = transform === undefined ? a => a.deepMap(v => Number(v) / 255) : transform
-        target_transform = target_transform === undefined ? a => a.deepMap(v => Number(v)).argmax(1) : target_transform
-        Dataset.call(this, train, transform, target_transform)
+        transform = !transform ? a => a.deepMap(v => Number(v) / 255) : transform
+        target_transform = !target_transform ? a => a.deepMap(v => Number(v)).argmax(1) : target_transform
+        Dataset.call(this, train, transform, target_transform, length)
     }
 
     Mnist.prototype.__proto__ = Dataset.prototype
 
-    Mnist.prototype.prepare = function() {
+    Mnist.prototype.prepare = function(length) {
         let data = null
         let label = null
         if(this.train) {
@@ -105,6 +105,12 @@
         } else {
             data = utils.read_csv("./mnist_csv/csv_image_test.csv")
             label = utils.read_csv("./mnist_csv/csv_label_test.csv")
+        }
+
+        if(length !== undefined) {
+            let index = Arr.range(data.length).shuffle().slice(0, data.length * length)
+            data = index.map(v => data[v])
+            label = index.map(v => label[v])
         }
 
         this.data = data
