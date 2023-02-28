@@ -142,11 +142,11 @@ Object.defineProperty(Arr.prototype, "copy", {
 
 Object.defineProperty(Arr.prototype, "same", {
     value : function(arr) {
-        if(this.length != arr.length) {
+        if(this.length !== arr.length) {
             return false
         }
         for(let i = 0; i < this.length; i++) {
-            if(this[i] != arr[i]) {
+            if(this[i] !== arr[i]) {
                 return false
             }
         }
@@ -194,6 +194,38 @@ Object.defineProperty(Arr.prototype, "ndim", {
         return this.shape.length
     }
 })
+
+Object.defineProperty(Arr.prototype, "view", {
+    get : function() {
+        return this._view()
+    }
+})
+
+Object.defineProperty(Arr.prototype, "_view", {
+    value : function(ndim, n) {
+        ndim = ndim === undefined ? this.ndim : ndim
+        n = n === undefined ? ndim : n
+        let result = ""
+        if(ndim == 1) {
+            for(let i = 0; i < this.length; i++) {
+                result += typeof this[i] === "object" ? JSON.stringify(this[i]) : this[i]
+                if(i !== this.length-1) {
+                    result += ", "
+                }
+            }
+            return "[" + result + "]"
+        }
+        ndim -= 1
+        for(let i = 0; i < this.length; i++) {
+            result += this[i]._view(ndim, n)
+            if(i !== this.length-1) {
+                result += "\n".repeat(ndim) + " ".repeat(n-ndim)
+            }
+        }
+        return "[" + result + "]"
+    }
+})
+
 
 Object.defineProperty(Arr.prototype, "get", {
     value : function(index) {
@@ -519,37 +551,6 @@ Object.defineProperty(Arr.prototype, "rdiv", {
 Object.defineProperty(Arr.prototype, "pow", {
     value : function(arr) {
         return this.cal(arr, (a, b) => Math.pow(a, b))
-    }
-})
-
-Object.defineProperty(Arr.prototype, "view", {
-    get : function() {
-        return this._view()
-    }
-})
-
-Object.defineProperty(Arr.prototype, "_view", {
-    value : function(ndim, n) {
-        ndim = ndim === undefined ? this.ndim : ndim
-        n = n === undefined ? ndim : n
-        let result = ""
-        if(ndim == 1) {
-            for(let i = 0; i < this.length; i++) {
-                result += typeof this[i] === "object" ? JSON.stringify(this[i]) : this[i]
-                if(i !== this.length-1) {
-                    result += ", "
-                }
-            }
-            return "[" + result + "]"
-        }
-        ndim -= 1
-        for(let i = 0; i < this.length; i++) {
-            result += this[i]._view(ndim, n)
-            if(i !== this.length-1) {
-                result += "\n".repeat(ndim) + " ".repeat(n-ndim)
-            }
-        }
-        return "[" + result + "]"
     }
 })
 
@@ -974,7 +975,6 @@ Object.defineProperty(Arr.prototype, "splice", {
 //     }
 //     console.log(Date.now() - start)
 // }
-
 
 module.exports = Arr
 

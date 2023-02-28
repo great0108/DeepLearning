@@ -48,6 +48,7 @@ Arr.prototype.transpose
 Arr.prototype.T
 Arr.prototype.calaxis
 Arr.prototype.max
+Arr.prototype.argmax
 Arr.prototype.min
 Arr.prototype.sum
 Arr.prototype.flip
@@ -551,6 +552,22 @@ a.max(1, true)  // [[2], [4]]
 a.max(-1)  // [2,4]
 a.max([0, 1])  // [4]
 a.max()  // [4]
+
+
+Arr.prototype.argmax
+
+array.max([axis, [keepdims]])
+
+배열의 축을 따라 최댓값의 인덱스를 구합니다.
+최댓값이 여러개라면 첫번째 인덱스를 반환합니다.
+keepdims가 true라면 차원을 축소시키지 않습니다
+
+let a = Arr([[1,2], [4,3]])
+a.argmax(1)  // [1,0]
+a.argmax(0)  // [1,1]
+a.argmax(1, true)  // [[1], [0]]
+a.max(-1)  // [1,0]
+a.max([0, 1])  // [0]
 
 
 Arr.prototype.min
