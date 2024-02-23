@@ -24,18 +24,20 @@ function Arr(arr) {
     if(arr instanceof Arr) {
         arr = arr.copy()
     } else if(arguments.length > 1) {
-        arr = Array.from(arguments)
+        arr = Arr.copy(Array.from(arguments))
+    } else if(Array.isArray(arr)) {
+        arr = Arr.copy(arr)
     } else {
-        arr = Array.isArray(arr) ? Arr.copy(arr) : (arr !== undefined ? Array.of(arr) : [])
+        arr = arr !== undefined ? [arr] : []
+        Object.setPrototypeOf(arr, Arr.prototype)
     }
-    Object.setPrototypeOf(arr, Arr.prototype)
     return arr
 }
 
 Arr.prototype.__proto__ = Array.prototype
 
 Arr.fill = function(size, value) {
-    size = Array.isArray(size) ? size : Array.of(size)
+    size = Array.isArray(size) ? size : [size]
     size = size.slice()
     if(Array.isArray(value)) {
         value = Arr(value)
@@ -103,19 +105,6 @@ Arr.calShape = function(arr1, arr2) {
     }
     return shape.reverse()
 }
-
-// Arr.deepArr = function(arr) {
-//     if(Array.isArray(arr)) {
-//         let result = []
-//         for(let i = 0; i < arr.length; i++) {
-//             result.push(Arr.deepArr(arr[i]))
-//         }
-//         arr = null
-//         Object.setPrototypeOf(result, Arr.prototype)
-//         return result
-//     }
-//     return arr
-// }
 
 Arr.deepArr = function(arr) {
     if(Array.isArray(arr)) {
@@ -230,7 +219,7 @@ Object.defineProperty(Arr.prototype, "_view", {
 Object.defineProperty(Arr.prototype, "get", {
     value : function(index) {
         index = arguments.length === 1 ?
-        Array.isArray(index) ? index : Array.of(index) :
+        Array.isArray(index) ? index : [index] :
         Array.from(arguments)
         let temp = this
         for(let i of index) {
@@ -252,7 +241,7 @@ Object.defineProperty(Arr.prototype, "_get", {
 
 Object.defineProperty(Arr.prototype, "set", {
     value : function(index, value) {
-        index = Array.isArray(index) ? index.slice() : Array.of(index)
+        index = Array.isArray(index) ? index.slice() : [index]
         let last = index.pop()
         let temp = this
         for(let i of index) {
@@ -331,8 +320,8 @@ Object.defineProperty(Arr.prototype, "slice", {
     value : function(start, end) {
         start = start === undefined ? 0 : start
         end = end === undefined ? this.length : end
-        start = Array.isArray(start) ? start : Array.of(start)
-        end = Array.isArray(end) ? end : Array.of(end)
+        start = Array.isArray(start) ? start : [start]
+        end = Array.isArray(end) ? end : [end]
         while(start.length < end.length) {
             start.push(0)
         }
@@ -359,9 +348,9 @@ Object.defineProperty(Arr.prototype, "slice", {
 Object.defineProperty(Arr.prototype, "overlap", {
     value : function(value, start, end) {
         start = start === undefined ? [] : start
-        start = Array.isArray(start) ? start : Array.of(start)
+        start = Array.isArray(start) ? start : [start]
         end = end === undefined ? [] : end
-        end = Array.isArray(end) ? end : Array.of(end)
+        end = Array.isArray(end) ? end : [end]
     
         let size = this.shape
         while(start.length < size.length) {
@@ -456,7 +445,7 @@ Object.defineProperty(Arr.prototype, "_squeeze", {
 Object.defineProperty(Arr.prototype, "broadcast", {
     value : function(shape) {
         shape = arguments.length === 1 
-        ? (Array.isArray(shape) ? shape : Array.of(shape)) 
+        ? (Array.isArray(shape) ? shape : [shape]) 
         : Array.from(arguments)
 
         let size = this.shape
@@ -579,7 +568,7 @@ Object.defineProperty(Arr.prototype, "flat", {
 Object.defineProperty(Arr.prototype, "reshape", {
     value : function(size) {
         size = arguments.length === 1 
-        ? (Array.isArray(size) ? size : Array.of(size)) 
+        ? (Array.isArray(size) ? size : [size]) 
         : Array.from(arguments)
         let temp = this.flat()
         if(size.includes(-1)) {
@@ -641,7 +630,7 @@ Object.defineProperty(Arr.prototype, "transpose", {
         }
 
         axis = arguments.length === 1 
-        ? (Array.isArray(axis) ? axis : Array.of(axis)) 
+        ? (Array.isArray(axis) ? axis : [axis]) 
         : Array.from(arguments)
 
         let size = this.shape
@@ -656,56 +645,60 @@ Object.defineProperty(Arr.prototype, "transpose", {
             }
         }
 
-        let result = this
-        let now = Arr.range(axis.length)
+        let size2 = size.slice()
         for(let i = 0; i < size.length; i++) {
-            let index = now.indexOf(axis[i])
-            result = result.swapaxis(i, index, size)
-            let temp = now[i]
-            now[i] = now[index]
-            now[index] = temp
-
-            temp = size[i]
-            size[i] = size[index]
-            size[index] = temp
+            size2[i] = size[axis[i]]
         }
+
+        let result = Arr.zeros(size2)
+        this.deepFor((v, i) => {
+            let index = i.map((_, i2) => i[axis[i2]])
+            result._set(index, v)
+        }, [], size)
         return result
     }
 })
 
 Object.defineProperty(Arr.prototype, "_calaxis", {
-    value : function(axis, fn, index, size, len) {
-        if(size === undefined) {
-            size = this.shape
-            axis = axis >= 0 ? axis : size.length + axis
-            if(axis >= size.length || axis < 0) {
-                throw new Error("차원이 배열을 벗어났습니다.")
-            }
-            index = index === undefined ? [] : index
-            len = size.splice(axis, 1)[0]
+    value : function(fn, axis, keepdims) {
+        let result = this
+        let size = this.shape
+        axis = axis >= 0 ? axis : size.length + axis
+
+        if(size.length-1 != axis) {
+            let order = Array(size.length).fill().map((v, i) => i)
+            order.splice(axis, 1)
+            order.push(axis)
+            result = result.transpose(order)
         }
-        let arr = []
-        if(size.length === index.length) {
-            index.splice(axis, 0, 0)
-            for(let i = 0; i < len; i++) {
-                arr.push(this._get(index))
-                index[axis] += 1
+
+        size.splice(axis, 1)
+        let arr = Arr.zeros(size)
+        arr = arr.deepMap((v, i) => {
+            v = fn(result._get(i), i)
+            if(Array.isArray(v)) {
+                Object.setPrototypeOf(v, Arr.prototype)
             }
-            index.splice(axis, 1)
-            return fn(arr, index.slice(0))
-        } else {
-            for(let i = 0; i < size[index.length]; i++) {
-                arr.push(this._calaxis(axis, fn, index.concat(i), size, len))
-            }
+            return v
+        })
+
+        let arrSize = arr.shape
+
+        if(arrSize.length > size.length) {
+            let order = Array(arrSize.length).fill().map((v, i) => i)
+            order.splice(axis, 0, order.length-1)
+            order.pop()
+            arr = arr.transpose(order)
+        } else if(keepdims) {
+            arr = arr.expand(axis)
         }
-        Object.setPrototypeOf(arr, Arr.prototype)
+        
         return arr
     }
 })
 
-
 Object.defineProperty(Arr.prototype, "calaxis", {
-    value : function(axis, fn, keepdims, opt) {
+    value : function(fn, axis, keepdims, opt) {
         if(axis === undefined || axis === null) {
             let ndim = this.ndim
             if(opt) {
@@ -720,43 +713,41 @@ Object.defineProperty(Arr.prototype, "calaxis", {
             }
             axis = Array(ndim).fill().map((v, i) => i)
         }
+
         if(Array.isArray(axis)) {
             let result = this
-            for(let a of axis.sort((a, b) => b-a)) {
-                result = result.calaxis(a, fn, keepdims)
+            for(let a of axis) {
+                result = result.calaxis(fn, a, keepdims)
             }
             return result
         }
 
-        let result = this._calaxis(axis, fn)
-        if(keepdims) {
-            result = result.expand(axis)
-        }
+        let result = this._calaxis(fn, axis, keepdims)
         return result
     }
 })
 
 Object.defineProperty(Arr.prototype, "max", {
     value : function(axis, keepdims) {
-        return this.calaxis(axis, v => Math.max.apply(null, v), keepdims, true)
+        return this.calaxis(v => Math.max.apply(null, v), axis, keepdims, true)
     }
 })
 
 Object.defineProperty(Arr.prototype, "argmax", {
     value : function(axis, keepdims) {
-        return this.calaxis(axis, v => v.indexOf(Math.max.apply(null, v)), keepdims)
+        return this.calaxis(v => v.indexOf(Math.max.apply(null, v)), axis, keepdims)
     }
 })
 
 Object.defineProperty(Arr.prototype, "min", {
     value : function(axis, keepdims) {
-        return this.calaxis(axis, v => Math.min.apply(null, v), keepdims, true)
+        return this.calaxis(v => Math.min.apply(null, v), axis, keepdims, true)
     }
 })
 
 Object.defineProperty(Arr.prototype, "sum", {
     value : function(axis, keepdims) {
-        return this.calaxis(axis, v => v.reduce((a, v) => a+v, 0), keepdims, true)
+        return this.calaxis(v => v.reduce((a, v) => a+v, 0), axis, keepdims, true)
     }
 })
 
@@ -822,7 +813,7 @@ Object.defineProperty(Arr.prototype, "select", {
             throw new Error("차원이 배열을 벗어났습니다.")
         }
         
-        index = Array.isArray(index) ? index : Array.of(index)
+        index = Array.isArray(index) ? index : [index]
         index = index.map(v => v >= 0 ? v : size[axis] + v)
         for(let i of index) {
             if(size[axis] <= i || index < 0) {
@@ -915,27 +906,175 @@ Object.defineProperty(Arr.prototype, "shuffle", {
     }
 })
 
+Object.defineProperty(Arr.prototype, "choose", {
+    value : function(index, axis) {
+        axis = axis === undefined ? -1 : axis
+        let size = this.shape
+        axis = axis >= 0 ? axis : size.length + axis
+        if(size.length <= axis || axis < 0) {
+            throw new Error("차원이 배열을 벗어났습니다.")
+        }
 
-// Arr.prototype.choose = function(index, axis) {
-//     axis = axis === undefined ? 0 : axis
+        index = index instanceof Arr ? index : Arr(index)
+        let indexSize = index.shape
+        if(size.length != indexSize.length) {
+            throw new Error("배열 차원과 인덱스 차원이 같아야합니다.")
+        }
+        index = index.deepMap(v => v >= 0 ? v : size[axis] + v)
+
+        let arr = Arr.zeros(indexSize)
+        arr = index.deepMap((v, i) => {
+            i.splice(axis, 0, v)
+            i.pop()
+            return this._get(i)
+        })
+        return arr
+    }
+})
+
+Object.defineProperty(Arr.prototype, "cat", {
+    value : function(arr, axis, multi) {
+        axis = axis === undefined ? 0 : axis
+        let size = this.shape
+        axis = axis >= 0 ? axis : size.length + axis
+        if(size.length <= axis || axis < 0) {
+            throw new Error("차원이 배열을 벗어났습니다.")
+        }
+
+        if(!multi) {
+            arr = [arr]
+        }
+
+        let axisLength = size[axis]
+        let arrSize = []
+        for(let i = 0; i < arr.length; i++) {
+            arr[i] = arr[i] instanceof Arr ? arr[i] : Arr(arr[i])
+            arrSize.push(arr[i].shape)
+            axisLength += arrSize[i][axis]
+            
+            if(!size.every((v, j) => j == axis || v == arrSize[i][j])) {
+                throw new Error("배열 크기가 달라서 합칠 수 없습니다.")
+            }
+        }
+
+        arrSize.unshift(size)
+        arr.unshift(this)
+
+        let resultSize = size.slice()
+        resultSize[axis] = axisLength
+        let result = Arr.zeros(resultSize)
+        for(let i = 0; i < arrSize.length; i++) {
+            let start = 0
+            for(let j = 0; j < i; j++) {
+                start += arrSize[j][axis]
+            }
+
+            arr[i].deepFor((v, i) => {
+                i[axis] += start
+                result._set(i, v)
+            })
+        }
+        return result
+    }
+})
+
+Object.defineProperty(Arr.prototype, "insert", {
+    value : function(index, value, axis) {
+        if(Array.isArray(index)) {
+            for(let i = 0; i < index.length; i++) {
+                this.insert(index[i], value, axis)
+            }
+            return this
+        }
     
-// }
-
-// Arr.prototype.cat = function(arr, axis) {
+        axis = axis === undefined ? 0 : axis
+        let size = this.shape
+        axis = axis >= 0 ? axis : size.length + axis
+        if(size.length <= axis || axis < 0) {
+            throw new Error("차원이 배열을 벗어났습니다.")
+        }
     
-// }
-
-// Arr.prototype.delete = function(start, deleteCount, axis) {
-
-// }
-
-// Arr.prototype.insert = function(start, axis) {
-
-// }
-
-// Arr.prototype.repeat = function(size) {
+        value = value instanceof Arr ? value : Arr(value)
+        let valueSize = value.shape
+        size[axis] = valueSize.length > axis ? valueSize[axis] : 1
+        value = value.broadcast(size)
     
-// }
+        if(axis === 0) {
+            Arr.prototype.splice.apply(this, [index, 0].concat(value.copy()))
+            return this
+        }
+        
+        const arr = Arr.zeros(size.slice(0, axis))
+        arr.deepFor((v, i) => {
+            Arr.prototype.splice.apply(this._get(i), [index, 0].concat(value._get(i).copy()))
+        })
+        return this
+    }
+})
+
+Object.defineProperty(Arr.prototype, "delete", {
+    value : function(index, count, axis) {
+        if(Array.isArray(index)) {
+            let result = []
+            for(let i = 0; i < index.length; i++) {
+                result.push(this.delete(index[i]-count*i, count, axis))
+            }
+    
+            if(result.length == 1) {
+                return result[0]
+            }
+    
+            let temp = result.shift()
+            return temp.cat(result, axis, true)
+        }
+    
+        axis = axis === undefined ? 0 : axis
+        let size = this.shape
+        axis = axis >= 0 ? axis : size.length + axis
+        if(size.length <= axis || axis < 0) {
+            throw new Error("차원이 배열을 벗어났습니다.")
+        }
+    
+        if(axis === 0) {
+            return this.splice(index, count)
+        }
+        
+        let arr = Arr.zeros(size.slice(0, axis))
+        arr = arr.deepMap((v, i) => {
+            return this._get(i).splice(index, count).copy()
+        })
+        return arr
+    }
+})
+
+Object.defineProperty(Arr.prototype, "repeat", {
+    value : function(repeats) {
+        repeats = Array.isArray(repeats) ? repeats : [repeats]
+        if(!repeats.every(v => v > 0)) {
+            throw new Error("반복 횟수는 양수여야합니다.")
+        }
+        let size = this.shape
+        let newSize = size.slice()
+        newSize.reverse()
+        repeats.reverse()
+        for(let i = 0; i < repeats.length; i++) {
+            if(newSize.length > i) {
+                newSize[i] *= repeats[i]
+            } else {
+                newSize.push(repeats[i])
+            }
+        }
+
+        newSize.reverse()
+        let arr = Arr.zeros(newSize)
+        arr = arr.deepMap((v, i) => {
+            let index = i.slice(-size.length).map((v, j) => v % size[j])
+            return this._get(index)
+        })
+        return arr
+    }
+})
+
 
 // overriding
 
@@ -957,15 +1096,36 @@ Object.defineProperty(Arr.prototype, "filter", {
 
 Object.defineProperty(Arr.prototype, "splice", {
     value : function() {
-        let temp = Array(arguments.length)
-        for(let i = 0; i < arguments.length; i++) {
-            temp[i] = arguments[i]
-        }
-        let arr = Array.prototype.splice.apply(this, temp)
+        let arr = Array.prototype.splice.apply(this, Array.from(arguments))
         Object.setPrototypeOf(arr, Arr.prototype)
         return arr
     }
 })
+
+Object.defineProperty(Arr.prototype, "concat", {
+    value : function() {
+        let arr = Array.prototype.concat.apply(this, Array.from(arguments))
+        Object.setPrototypeOf(arr, Arr.prototype)
+        return arr
+    }
+})
+
+Object.defineProperty(Arr.prototype, "reverse", {
+    value : function() {
+        Array.prototype.reverse.call(this)
+        Object.setPrototypeOf(this, Arr.prototype)
+        return this
+    }
+})
+
+Object.defineProperty(Arr.prototype, "sort", {
+    value : function(fn) {
+        Array.prototype.sort.call(this, fn)
+        Object.setPrototypeOf(this, Arr.prototype)
+        return this
+    }
+})
+
 
 // function test() {
 //     let a = Arr.zeros(5,5,5)
@@ -975,6 +1135,7 @@ Object.defineProperty(Arr.prototype, "splice", {
 //     }
 //     console.log(Date.now() - start)
 // }
+
 
 module.exports = Arr
 
