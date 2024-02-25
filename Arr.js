@@ -651,11 +651,30 @@ Object.defineProperty(Arr.prototype, "transpose", {
         }
 
         let result = Arr.zeros(size2)
-        this.deepFor((v, i) => {
-            let index = i.map((_, i2) => i[axis[i2]])
-            result._set(index, v)
-        }, [], size)
+        this._transpose(result, axis.map((v, i) => axis.indexOf(i)))
         return result
+    }
+})
+
+Object.defineProperty(Arr.prototype, "_transpose", {
+    value : function(arr, axis, index, size) {
+        size = size === undefined ? this.shape : size
+        index = index === undefined ? Array(size.length).fill().map(v => 0) : index
+        let nowaxis = index.length - size.length
+
+        if(size.length === 1) {
+            for(let i = 0; i < size[0]; i++) {
+                index[axis[nowaxis]] = i
+                arr._set(index, this[i])
+            }
+        } else {
+            let iter = size[0]
+            size = size.slice(1)
+            for(let i = 0; i < iter; i++) {
+                index[axis[nowaxis]] = i
+                this[i]._transpose(arr, axis, index, size)
+            }
+        }
     }
 })
 
@@ -908,27 +927,32 @@ Object.defineProperty(Arr.prototype, "shuffle", {
 
 Object.defineProperty(Arr.prototype, "choose", {
     value : function(index, axis) {
+        let arr = this
+        let size = arr.shape
+
+        index = index instanceof Arr ? index : Arr(index)
+        let indexSize = index.shape
+        if(size.length > indexSize.length) {
+            throw new Error("인덱스 차원이 배열 차원과 같거나 커야합니다.")
+        } else if(size.length < indexSize.length) {
+            size = indexSize.slice(0, -size.length).concat(size)
+            arr = arr.broadcast(size)
+        }
+
         axis = axis === undefined ? -1 : axis
-        let size = this.shape
         axis = axis >= 0 ? axis : size.length + axis
         if(size.length <= axis || axis < 0) {
             throw new Error("차원이 배열을 벗어났습니다.")
         }
-
-        index = index instanceof Arr ? index : Arr(index)
-        let indexSize = index.shape
-        if(size.length != indexSize.length) {
-            throw new Error("배열 차원과 인덱스 차원이 같아야합니다.")
-        }
         index = index.deepMap(v => v >= 0 ? v : size[axis] + v)
 
-        let arr = Arr.zeros(indexSize)
-        arr = index.deepMap((v, i) => {
+        let result = Arr.zeros(indexSize)
+        result = index.deepMap((v, i) => {
             i.splice(axis, 0, v)
             i.pop()
-            return this._get(i)
+            return arr._get(i)
         })
-        return arr
+        return result
     }
 })
 
@@ -1034,7 +1058,8 @@ Object.defineProperty(Arr.prototype, "delete", {
         if(size.length <= axis || axis < 0) {
             throw new Error("차원이 배열을 벗어났습니다.")
         }
-    
+
+        count = count === undefined ? size[axis] : count
         if(axis === 0) {
             return this.splice(index, count)
         }
@@ -1130,8 +1155,8 @@ Object.defineProperty(Arr.prototype, "sort", {
 // function test() {
 //     let a = Arr.zeros(5,5,5)
 //     let start = Date.now()
-//     for(let i = 0; i < 1e8; i++) {
-//         a.set([1,2,3], 1)
+//     for(let i = 0; i < 1e5; i++) {
+//         a.transpose([2,0,1])
 //     }
 //     console.log(Date.now() - start)
 // }
