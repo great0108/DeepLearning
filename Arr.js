@@ -1004,12 +1004,12 @@
     
     Object.defineProperty(Arr.prototype, "insert", {
         value : function(index, value, axis) {
-            if(Array.isArray(index)) {
-                for(let i = 0; i < index.length; i++) {
-                    this.insert(index[i], value, axis)
-                }
-                return this
-            }
+            // if(Array.isArray(index)) {
+            //     for(let i = 0; i < index.length; i++) {
+            //         this.insert(index[i], value, axis)
+            //     }
+            //     return this
+            // }
         
             axis = axis === undefined ? 0 : axis
             let size = this.shape
@@ -1020,17 +1020,24 @@
         
             value = value instanceof Arr ? value : Arr(value)
             let valueSize = value.shape
-            size[axis] = valueSize.length > axis ? valueSize[axis] : 1
-            value = value.broadcast(size)
+            let newSize = size.slice()
+            if(valueSize.length == size.length) {
+                newSize[axis] = valueSize[axis]
+            } else {
+                newSize[axis] = 1
+            }
+            value = value.broadcast(newSize)
         
             if(axis === 0) {
                 Arr.prototype.splice.apply(this, [index, 0].concat(value.copy()))
                 return this
             }
+
+            index = index instanceof Arr ? index : Arr(index)
+            index = index.broadcast(size.slice(0, axis))
             
-            const arr = Arr.zeros(size.slice(0, axis))
-            arr.deepFor((v, i) => {
-                Arr.prototype.splice.apply(this._get(i), [index, 0].concat(value._get(i).copy()))
+            index.deepFor((v, i) => {
+                Arr.prototype.splice.apply(this._get(i), [v, 0].concat(value._get(i).copy()))
             })
             return this
         }
@@ -1073,12 +1080,20 @@
     })
     
     Object.defineProperty(Arr.prototype, "repeat", {
-        value : function(repeats) {
+        value : function(repeats, axis) {
+            axis = axis === undefined ? -1 : axis
+            let size = this.shape
+            axis = axis >= 0 ? axis : size.length + axis
+            if(size.length <= axis || axis < 0) {
+                throw new Error("차원이 배열을 벗어났습니다.")
+            }
+
             repeats = Array.isArray(repeats) ? repeats : [repeats]
             if(!repeats.every(v => v > 0)) {
                 throw new Error("반복 횟수는 양수여야합니다.")
             }
-            let size = this.shape
+            repeats = repeats.concat(Array(size.length - axis-1).fill(1))
+
             let newSize = size.slice()
             newSize.reverse()
             repeats.reverse()
@@ -1160,6 +1175,12 @@
     //     }
     //     console.log(Date.now() - start)
     // }
+
+    let a = Arr([[1,2], [3,4]])
+    console.log(a.insert([0,1], [[5], [6]], 1))
+
+    // let b = Arr([1,2,3,4])
+    // console.log(b.insert(0, [5,6]))
     
     
     module.exports = Arr
