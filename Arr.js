@@ -1004,12 +1004,13 @@
     
     Object.defineProperty(Arr.prototype, "insert", {
         value : function(index, value, axis) {
-            // if(Array.isArray(index)) {
-            //     for(let i = 0; i < index.length; i++) {
-            //         this.insert(index[i], value, axis)
-            //     }
-            //     return this
-            // }
+            if(Array.isArray(index)) {
+                index.sort()
+                for(let i = 0; i < index.length; i++) {
+                    this.insert(index[i], value, axis)
+                }
+                return this
+            }
         
             axis = axis === undefined ? 0 : axis
             let size = this.shape
@@ -1032,12 +1033,10 @@
                 Arr.prototype.splice.apply(this, [index, 0].concat(value.copy()))
                 return this
             }
-
-            index = index instanceof Arr ? index : Arr(index)
-            index = index.broadcast(size.slice(0, axis))
             
-            index.deepFor((v, i) => {
-                Arr.prototype.splice.apply(this._get(i), [v, 0].concat(value._get(i).copy()))
+            const arr = Arr.zeros(size.slice(0, axis))
+            arr.deepFor((v, i) => {
+                Arr.prototype.splice.apply(this._get(i), [index, 0].concat(value._get(i).copy()))
             })
             return this
         }
@@ -1047,6 +1046,7 @@
         value : function(index, count, axis) {
             if(Array.isArray(index)) {
                 let result = []
+                index.sort()
                 for(let i = 0; i < index.length; i++) {
                     result.push(this.delete(index[i]-count*i, count, axis))
                 }
@@ -1176,12 +1176,6 @@
     //     console.log(Date.now() - start)
     // }
 
-    let a = Arr([[1,2], [3,4]])
-    console.log(a.insert([0,1], [[5], [6]], 1))
-
-    // let b = Arr([1,2,3,4])
-    // console.log(b.insert(0, [5,6]))
-    
     
     module.exports = Arr
     
