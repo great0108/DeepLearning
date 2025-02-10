@@ -123,6 +123,15 @@
         }
     }
 
+    function exist_file(path) {
+        if(setting.nodeJS) {
+            const fs = require("fs")
+            return fs.existsSync(path)
+        } else {
+            return Boolean(FileStream.read(path))
+        }
+    }
+
     module.exports = {
         reshape_sum_backward : reshape_sum_backward,
         sum_to : sum_to,
@@ -132,6 +141,7 @@
         pair : pair,
         read_csv : read_csv,
         read_json : read_json,
-        write_json : write_json
+        write_json : write_json,
+        exist_file : exist_file
     }
 })()
