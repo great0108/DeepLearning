@@ -540,6 +540,7 @@
         flatten : flatten,
         accuracy : accuracy,
         dropout : dropout,
+        im2col : im2col,
         conv2d_simple : conv2d_simple,
         polling : polling_simple
     }
