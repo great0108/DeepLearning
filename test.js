@@ -26,11 +26,3 @@ const {DataLoader} = require("./dataloaders")
 // y.backward()
 // console.log(y.shape)
 // console.log(x.grad.shape)
-
-let a = Arr([[1,2], [3,4]])
-console.log(a.mean(1))  // [2,4]
-console.log(a.mean(0))  // [3,4]
-console.log(a.mean(1, true))  // [[2], [4]]
-console.log(a.mean(-1))  // [2,4]
-console.log(a.mean([0, 1]))  // [4]
-console.log(a.mean())  // [2,4]
