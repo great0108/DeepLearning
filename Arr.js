@@ -690,16 +690,22 @@
                 order.push(axis)
                 result = result.transpose(order)
             }
-    
-            size.splice(axis, 1)
-            let arr = Arr.zeros(size)
-            arr = arr.deepMap((v, i) => {
-                v = fn(result._get(i), i)
-                if(Array.isArray(v)) {
-                    Object.setPrototypeOf(v, Arr.prototype)
-                }
-                return v
-            })
+
+            let arr = null
+            if(size.length == 1) {
+                arr = Arr(fn(result))
+            } else {
+                size.splice(axis, 1)
+                arr = Arr.zeros(size)
+
+                arr = arr.deepMap((v, i) => {
+                    v = fn(result._get(i), i)
+                    if(Array.isArray(v)) {
+                        Object.setPrototypeOf(v, Arr.prototype)
+                    }
+                    return v
+                })
+            }
     
             let arrSize = arr.shape
     
@@ -734,6 +740,7 @@
             }
     
             if(Array.isArray(axis)) {
+                axis.sort((a, b) => b - a)
                 let result = this
                 for(let a of axis) {
                     result = result.calaxis(fn, a, keepdims)
@@ -763,10 +770,22 @@
             return this.calaxis(v => Math.min.apply(null, v), axis, keepdims, true)
         }
     })
+
+    Object.defineProperty(Arr.prototype, "argmin", {
+        value : function(axis, keepdims) {
+            return this.calaxis(v => v.indexOf(Math.min.apply(null, v)), axis, keepdims)
+        }
+    })
     
     Object.defineProperty(Arr.prototype, "sum", {
         value : function(axis, keepdims) {
             return this.calaxis(v => v.reduce((a, v) => a+v, 0), axis, keepdims, true)
+        }
+    })
+
+    Object.defineProperty(Arr.prototype, "mean", {
+        value : function(axis, keepdims) {
+            return this.calaxis(v => v.reduce((a, v) => a+v, 0) / v.length, axis, keepdims, true)
         }
     })
     

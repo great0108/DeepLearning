@@ -51,7 +51,9 @@ Arr.prototype.calaxis
 Arr.prototype.max
 Arr.prototype.argmax
 Arr.prototype.min
+Arr.prototype.argmin
 Arr.prototype.sum
+Arr.prototype.mean
 Arr.prototype.flip
 Arr.prototype.select
 Arr.prototype.choose
@@ -573,8 +575,8 @@ let a = Arr([[1,2], [4,3]])
 a.argmax(1)  // [1,0]
 a.argmax(0)  // [1,1]
 a.argmax(1, true)  // [[1], [0]]
-a.max(-1)  // [1,0]
-a.max([0, 1])  // [0]
+a.argmax(-1)  // [1,0]
+a.argmax([0, 1])  // [0]
 
 
 Arr.prototype.min
@@ -594,6 +596,22 @@ a.min([0, 1])  // [4]
 a.min()  // [4]
 
 
+Arr.prototype.argmin
+
+array.argmin([axis, [keepdims]])
+
+배열의 축을 따라 최솟값의 인덱스를 구합니다.
+최솟값이 여러개라면 첫번째 인덱스를 반환합니다.
+keepdims가 true라면 차원을 축소시키지 않습니다
+
+let a = Arr([[1,2], [4,3]])
+a.argmin(1)  // [0,1]
+a.argmin(0)  // [0,0]
+a.argmin(1, true)  // [[0], [1]]
+a.argmin(-1)  // [0,1]
+a.argmin([0, 1])  // [0]
+
+
 Arr.prototype.sum
 
 array.sum([axis, [keepdims]])
@@ -609,6 +627,23 @@ a.sum(1, true)  // [[3], [7]]
 a.sum(-1)  // [3,7]
 a.sum([0, 1])  // [10]
 a.sum()  // [10]
+
+
+Arr.prototype.mean
+
+array.mean([axis, [keepdims]])
+
+배열의 축을 따라 평균을 구합니다.
+axis를 생략하거나 null이라면 모든 값에 대해서 평균을 구합니다
+keepdims가 true라면 차원을 축소시키지 않습니다
+
+let a = Arr([[1,2], [3,4]])
+a.mean(1)  // [1.5,3.5]
+a.mean(0)  // [2,3]
+a.mean(1, true)  // [[1.5], [3.5]]
+a.mean(-1)  // [1.5,3.5]
+a.mean([0, 1])  // [2.5]
+a.mean()  // [2.5]
 
 
 Arr.prototype.flip

@@ -657,6 +657,7 @@
         as_variable : as_variable,
         no_grad : no_grad,
         test_mode : test_mode,
-        sum_to : sum_to
+        sum_to : sum_to,
+        broadcast_to : broadcast_to
     }
 })()

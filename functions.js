@@ -1,7 +1,7 @@
 (function() {
     "use strict"
     const Arr = require("./Arr")
-    const {Operation, Variable, List, Config, sum_to, as_variable, as_array} = require("./core")
+    const {Operation, Variable, List, Config, sum_to, broadcast_to, as_variable, as_array} = require("./core")
     const utils = require("./utils")
 
     function Sin() {
@@ -137,23 +137,6 @@
     }
 
 
-    function Conv2d(stride, pad) {
-        let result = Operation.inherit(Conv2d)
-        result.stride = utils.pair(stride === undefined ? 1 : stride)
-        result.pad = utils.pair(pad === undefined ? 0 : pad)
-        return result
-    }
-
-    Conv2d.prototype.__proto__ = Operation.prototype
-
-    Conv2d.prototype.forward = function(x, W, b) {
-        let [KH, KW] = W.shape.slice(2)
-        let col = im2col_array(x, [KH, KW], this.stride, this.pad, false)
-
-        
-    }
-
-
     function Im2col(kernel_size, stride, pad, to_matrix) {
         let result = Operation.inherit(Im2col)
         result.input_shape = null
@@ -199,6 +182,69 @@
         let gx = im2col(gy, this.kernel_size, this.stride, this.pad, this.to_matrix)
         return gx
     }
+
+
+    function Pooling(kernel_size, stride, pad) {
+        stride = stride === undefined ? 1 : stride
+        pad = pad === undefined ? 0 : pad
+
+        let result = Operation.inherit(Pooling)
+        result.kernel_size = kernel_size
+        result.stride = stride
+        result.pad = pad
+        return result
+    }
+
+    Pooling.prototype.__proto__ = Operation.prototype
+
+    Pooling.prototype.forward = function(x) {
+        let col = im2col_array(x, this.kernel_size, this.stride, this.pad, false)
+        let [N, C, KH, KW, OH, OW] = col.shape
+        col = col.reshape(N, C, KH * KW, OH, OW)
+        this.indexes = col.argmax(axis=2)
+        let y = col.max(2)
+        return y
+    }
+
+    Pooling.prototype.backward = function(gy) {
+        return Pooling2DGrad(this)(gy)
+    }
+
+
+    function AveragePooling(kernel_size, stride, pad) {
+        stride = stride === undefined ? 1 : stride
+        pad = pad === undefined ? 0 : pad
+
+        let result = Operation.inherit(Pooling)
+        result.kernel_size = kernel_size
+        result.stride = stride
+        result.pad = pad
+        result.input_shape = null
+        return result
+    }
+
+    AveragePooling.prototype.__proto__ = Operation.prototype
+
+    AveragePooling.prototype.forward = function(x) {
+        this.input_shape = x.shape
+        let col = im2col_array(x, this.kernel_size, this.stride, this.pad, false)
+        let y = col.mean([2, 3])
+        return y
+    }
+
+    AveragePooling.prototype.backward = function(gy) {
+        let [N, C, OH, OW] = gy.shape
+        let [KW, KH] = utils.pair(this.kernel_size)
+
+        gy = gy.div(KW * KH)
+        let gcol = broadcast_to(gy.reshape(-1), (KH, KW, N*C*OH*OW))
+        gcol = gcol.reshape(KH, KW, N, C< OH, OW).transpose(2, 3, 0, 1, 4, 5)
+
+        let gx = col2im(gcol, this.input_shape, this.kernel_size, this.stride, this.pad, false)
+        return gx
+    }
+
+
 
 
     function Sigmoid() {
