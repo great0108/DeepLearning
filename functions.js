@@ -201,13 +201,8 @@
         let col = im2col_array(x, this.kernel_size, this.stride, this.pad, false)
         let [N, C, KH, KW, OH, OW] = col.shape
         col = col.reshape(N, C, KH * KW, OH, OW)
-        this.indexes = col.argmax(axis=2)
         let y = col.max(2)
         return y
-    }
-
-    Pooling.prototype.backward = function(gy) {
-        return Pooling2DGrad(this)(gy)
     }
 
 
@@ -215,7 +210,7 @@
         stride = stride === undefined ? 1 : stride
         pad = pad === undefined ? 0 : pad
 
-        let result = Operation.inherit(Pooling)
+        let result = Operation.inherit(AveragePooling)
         result.kernel_size = kernel_size
         result.stride = stride
         result.pad = pad
@@ -237,14 +232,12 @@
         let [KW, KH] = utils.pair(this.kernel_size)
 
         gy = gy.div(KW * KH)
-        let gcol = broadcast_to(gy.reshape(-1), (KH, KW, N*C*OH*OW))
-        gcol = gcol.reshape(KH, KW, N, C< OH, OW).transpose(2, 3, 0, 1, 4, 5)
+        let gcol = broadcast_to(gy.reshape(-1), [KH, KW, N*C*OH*OW])
+        gcol = gcol.reshape(KH, KW, N, C, OH, OW).transpose(2, 3, 0, 1, 4, 5)
 
         let gx = col2im(gcol, this.input_shape, this.kernel_size, this.stride, this.pad, false)
         return gx
     }
-
-
 
 
     function Sigmoid() {
@@ -409,6 +402,10 @@
         return Col2im(input_shape, kernel_size, stride, pad, to_matrix)(x)
     }
 
+    function average_pooling(x, kernel_size, stride, pad) {
+        return AveragePooling(kernel_size, stride, pad)(x)
+    }
+
     function sigmoid(x) {
         return Sigmoid()(x)
     }
@@ -479,7 +476,7 @@
         return y
     }
 
-    function polling_simple(x, kernel_size, stride, pad) {
+    function pooling_simple(x, kernel_size, stride, pad) {
         stride = stride === undefined ? 1 : stride
         pad = pad === undefined ? 0 : pad
         x = as_variable(x)
@@ -588,6 +585,7 @@
         dropout : dropout,
         im2col : im2col,
         conv2d_simple : conv2d_simple,
-        polling : polling_simple
+        pooling : pooling_simple,
+        average_pooling : average_pooling
     }
 })()

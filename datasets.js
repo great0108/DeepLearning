@@ -107,14 +107,25 @@
             label = utils.read_csv("./mnist_csv/csv_label_test.csv")
         }
 
-        if(length !== undefined) {
-            let index = Arr.range(data.length).shuffle().slice(0, data.length * length)
-            data = index.map(v => data[v])
-            label = index.map(v => label[v])
+        let prepared_data, prepared_label
+        if(length === undefined) {
+            let index = Arr.range(data.length).shuffle()
+            prepared_data = index.map(v => data[v])
+            prepared_label = index.map(v => label[v])
+        } else {
+            let idx = Arr.range(data.length)
+            prepared_data = Arr()
+            prepared_label = Arr()
+            for(let i = 0; i < 10; i++) {
+                let temp = idx.filter(v => label[v][i] == 1)
+                let index = Arr.range(temp.length).shuffle().slice(0, Math.floor(length/10))
+                prepared_data = prepared_data.concat(index.map(v => data[temp[v]]))
+                prepared_label = prepared_label.concat(index.map(v => label[temp[v]]))
+            }
         }
 
-        this.data = data
-        this.label = label
+        this.data = prepared_data
+        this.label = prepared_label
     }
 
     module.exports = {

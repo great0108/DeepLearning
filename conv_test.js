@@ -1,5 +1,5 @@
 const {Variable, no_grad, test_mode} = require("./core")
-const {sigmoid, mean_squared_error, softmax_cross_entropy, accuracy, dropout, relu, polling, flatten} = require("./functions")
+const {sigmoid, mean_squared_error, softmax_cross_entropy, accuracy, dropout, relu, pooling, average_pooling, flatten} = require("./functions")
 const {Layer, Linear, Conv2d} = require("./layers")
 const {MLP} = require("./models")
 const {SGD, MomentumSGD, AdaGrad, AdaDelta, Adam} = require("./optimizers")
@@ -17,7 +17,7 @@ ConvModel.prototype.__proto__ = Layer.prototype
 
 ConvModel.prototype.forward = function(x) {
     let y = relu(this.conv1(x))
-    y = polling(y, 2, 2)
+    y = average_pooling(y, 2, 2)
     y = flatten(y)
     y = relu(this.l1(y))
     y = this.l2(y)
@@ -25,11 +25,11 @@ ConvModel.prototype.forward = function(x) {
 }
 
 let max_epoch = 10
-let batch_size = 50
+let batch_size = 10
 let lr = 0.01
 
-let train_set = Mnist(true, a => a.deepMap(v => Number(v) / 255).reshape(-1, 1, 28, 28), null, 1/10)
-let test_set = Mnist(false, a => a.deepMap(v => Number(v) / 255).reshape(-1, 1, 28, 28), null, 1/10)
+let train_set = Mnist(true, a => a.deepMap(v => Number(v) / 255).reshape(-1, 1, 28, 28), null, 100)
+let test_set = Mnist(false, a => a.deepMap(v => Number(v) / 255).reshape(-1, 1, 28, 28), null, 100)
 let train_loader = DataLoader(train_set, batch_size)
 let test_loader = DataLoader(test_set, batch_size)
 
@@ -40,6 +40,7 @@ for(let epoch = 0; epoch < max_epoch; epoch++) {
     let sum_loss = 0
     let sum_acc = 0
     for(let data of train_loader) {
+        let time = new Date()
         let [x, t] = data
         let y = model(x)
         let loss = softmax_cross_entropy(y, t)
