@@ -29,18 +29,14 @@ console.log("train start")
 for(let epoch = 0; epoch < max_epoch; epoch++) {
     let sum_loss = 0
     let sum_acc = 0
-    //let time = Date.now()
     for(let data of train_loader) {
         let [x, t] = data
         let y = model(x)
-        //console.log(Date.now() - time)
         let loss = softmax_cross_entropy(y, t)
         let acc = accuracy(y, t)
         model.cleargrads()
         loss.backward()
-        //console.log(Date.now() - time)
         optimizer.update()
-        //console.log(Date.now() - time, "-------------------------------")
 
         sum_loss += loss.data[0] * t.length
         sum_acc += acc.data[0] * t.length

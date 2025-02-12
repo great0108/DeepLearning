@@ -119,7 +119,7 @@
             const fs = require("fs")
             fs.writeFileSync(path, json, "utf-8")
         } else {
-            FileStream.write(setting.module_path + "/" +  path, json)
+            FileStream.write(setting.module_path + "/" + path, json)
         }
     }
 
