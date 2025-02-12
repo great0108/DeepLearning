@@ -35,7 +35,8 @@ let test_loader = DataLoader(test_set, batch_size)
 
 let model = new ConvModel()
 let optimizer = Adam(lr).setup(model)
-console.log("start")
+console.log("train start")
+
 for(let epoch = 0; epoch < max_epoch; epoch++) {
     let sum_loss = 0
     let sum_acc = 0
@@ -48,8 +49,8 @@ for(let epoch = 0; epoch < max_epoch; epoch++) {
         loss.backward()
         optimizer.update()
 
-        sum_loss += loss.data[0] * t.length
-        sum_acc += acc.data[0] * t.length
+        sum_loss += loss.data[0] * x.length
+        sum_acc += acc.data[0] * x.length
     }
 
     if((epoch+1) % 1 === 0) {

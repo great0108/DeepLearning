@@ -24,8 +24,8 @@ if(utils.exist_file("mlp.json")) {
 }
 
 let optimizer = Adam(lr).setup(model)
-
 console.log("train start")
+
 for(let epoch = 0; epoch < max_epoch; epoch++) {
     let sum_loss = 0
     let sum_acc = 0
@@ -38,8 +38,8 @@ for(let epoch = 0; epoch < max_epoch; epoch++) {
         loss.backward()
         optimizer.update()
 
-        sum_loss += loss.data[0] * t.length
-        sum_acc += acc.data[0] * t.length
+        sum_loss += loss.data[0] * x.length
+        sum_acc += acc.data[0] * x.length
     }
 
     let avg_loss = sum_loss / train_set.length

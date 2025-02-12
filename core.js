@@ -91,6 +91,10 @@
         this.generation = func.generation + 1
     }
 
+    Variable.prototype.unchain = function() {
+        this.creator = null
+    }
+
     Variable.prototype.cleargrad = function() {
         this.grad = null
     }
@@ -141,6 +145,21 @@
 
             if(!retain_grad) {
                 f.outputs.forEach(y => y.grad = null)
+            }
+        }
+    }
+
+    Variable.prototype.unchain_backward = function() {
+        if(this.creator != null) {
+            let funcs = [this.creator]
+            while(funcs.length > 0) {
+                let f = funcs.pop()
+                for(let x of f.inputs) {
+                    if(x.creator != null) {
+                        funcs.push(x.creator)
+                        x.unchain()
+                    }
+                }
             }
         }
     }

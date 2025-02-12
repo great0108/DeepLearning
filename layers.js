@@ -1,7 +1,7 @@
 (function() {
     "use strict"
     const Arr = require("./Arr")
-    const {Parameter, List} = require("./core")
+    const {Parameter, List, add} = require("./core")
     const F = require("./functions")
     const Callable = require("./Callable")
     const utils = require("./utils")
@@ -180,9 +180,38 @@
         return y
     }
 
+
+    function RNN(hidden_size, in_size) {
+        if(!(this instanceof RNN)) {
+            return new RNN(hidden_size, in_size)
+        }
+        this.x2h = Linear(hidden_size, false, in_size)
+        this.h2h = Linear(hidden_size, true, in_size)
+        this.h = null
+        return this.make(this)
+    }
+
+    RNN.prototype.__proto__ = Layer.prototype
+
+    RNN.prototype.reset_state = function() {
+        this.h = null
+    }
+
+    RNN.prototype.forward = function(x) {
+        let h_new = null
+        if(this.h == null) {
+            h_new = F.tanh(this.x2h(x))
+        } else {
+            h_new = F.tanh(this.x2h(x).plus(this.h2h(x)))
+        }
+        this.h = h_new
+        return h_new
+    }
+
     module.exports = {
         Layer : Layer,
         Linear : Linear,
-        Conv2d : Conv2d
+        Conv2d : Conv2d,
+        RNN : RNN
     }
 })()

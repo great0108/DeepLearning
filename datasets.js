@@ -38,6 +38,15 @@
         throw new Error("NotImplemented")
     }
 
+    Dataset.prototype[Symbol.iterator] = function* () {
+        for(let i = 0; i < this.data.length; i++) {
+            if(this.label == null) {
+                yield [this.data[i], null]
+            }
+            yield [this.data[i], this.label[i]]
+        }
+    }
+
 
     function get_spiral() {
         let num_data = 100
@@ -107,12 +116,9 @@
             label = utils.read_csv("./mnist_csv/csv_label_test.csv")
         }
 
-        let prepared_data, prepared_label
-        if(length === undefined) {
-            let index = Arr.range(data.length).shuffle()
-            prepared_data = index.map(v => data[v])
-            prepared_label = index.map(v => label[v])
-        } else {
+        let prepared_data = data
+        let prepared_label = label
+        if(length !== undefined) {
             let idx = Arr.range(data.length)
             prepared_data = Arr()
             prepared_label = Arr()
@@ -128,8 +134,35 @@
         this.label = prepared_label
     }
 
+
+    function SinCurve() {
+        if(!(this instanceof SinCurve)) {
+            return new SinCurve()
+        }
+        Dataset.apply(this, Array.from(arguments))
+    }
+
+    SinCurve.prototype.__proto__ = Dataset.prototype
+
+    SinCurve.prototype.prepare = function() {
+        let num_data = 1000
+        let x = Arr.range(0, 2 * Math.PI + 1e-6, 2 * Math.PI / (num_data-1))
+        let noise = Arr.rand(x.shape).mul(0.1).minus(0.05) // range -0.05 ~ 0.05
+        let y = null
+
+        if(this.train) {
+            y = x.map((v, i) => Math.sin(v) + noise[i])
+        } else {
+            y = x.map(v => Math.cos(v))
+        }
+
+        this.data = y.slice(0, -1).expand(1)
+        this.label = y.slice(1).expand(1)
+    }
+    
     module.exports = {
         Spiral : Spiral,
-        Mnist : Mnist
+        Mnist : Mnist,
+        SinCurve : SinCurve
     }
 })()
