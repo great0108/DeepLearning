@@ -7,22 +7,26 @@ const Arr = require("./Arr")
 const {Spiral, Mnist} = require("./datasets")
 const {DataLoader} = require("./dataloaders")
 
-let x1 = Arr.rand(1, 3, 7, 7)
-let col1 = im2col(x1, 5, 1, 0, true)
-console.log(col1.shape)
+// let x1 = Arr.rand(1, 3, 7, 7)
+// let col1 = im2col(x1, 5, 1, 0, true)
+// console.log(col1.shape)
 
-let x2 = Arr.rand(10, 3, 7, 7)
-let kernel_size = [5, 5]
-let stride = [1, 1]
-let pad = [0, 0]
-let col2 = im2col(x2, kernel_size, stride, pad, true)
-console.log(col2.shape)
+// let x2 = Arr.rand(10, 3, 7, 7)
+// let kernel_size = [5, 5]
+// let stride = [1, 1]
+// let pad = [0, 0]
+// let col2 = im2col(x2, kernel_size, stride, pad, true)
+// console.log(col2.shape)
 
-let [N, C, H, W1] = [1, 5, 15, 15]
-let [OC, KH, KW] = [8, 3, 3]
-let x = new Variable(Arr.rand(N, C, H, W1))
-let W = Arr.rand(OC, C, KH, KW)
-let y = conv2d_simple(x, W, null, 1, 1)
-y.backward()
-console.log(y.shape)
-console.log(x.grad.shape)
+// let [N, C, H, W1] = [1, 5, 15, 15]
+// let [OC, KH, KW] = [8, 3, 3]
+// let x = new Variable(Arr.rand(N, C, H, W1))
+// let W = Arr.rand(OC, C, KH, KW)
+// let y = conv2d_simple(x, W, null, 1, 1)
+// y.backward()
+// console.log(y.shape)
+// console.log(x.grad.shape)
+
+let xs = Arr.range(0, 2 * Math.PI + 1e-6, 2 * Math.PI / (1000-1))
+xs = Arr(xs.map(v => Math.sin(v)).slice(0, 100)).expand(1)
+console.log(xs)

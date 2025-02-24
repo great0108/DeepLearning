@@ -144,8 +144,8 @@
 
     SinCurve.prototype.__proto__ = Dataset.prototype
 
-    SinCurve.prototype.prepare = function() {
-        let num_data = 1000
+    SinCurve.prototype.prepare = function(num_data) {
+        num_data = num_data === undefined ? 1000 : num_data
         let x = Arr.range(0, 2 * Math.PI + 1e-6, 2 * Math.PI / (num_data-1))
         let noise = Arr.rand(x.shape).mul(0.1).minus(0.05) // range -0.05 ~ 0.05
         let y = null

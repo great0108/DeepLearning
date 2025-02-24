@@ -28,8 +28,8 @@ let max_epoch = 10
 let batch_size = 10
 let lr = 0.01
 
-let train_set = Mnist(true, a => a.deepMap(v => Number(v) / 255).reshape(-1, 1, 28, 28), null, 100)
-let test_set = Mnist(false, a => a.deepMap(v => Number(v) / 255).reshape(-1, 1, 28, 28), null, 100)
+let train_set = Mnist(true, a => a.deepMap(v => Number(v) / 255).reshape(-1, 1, 28, 28), null, 1000)
+let test_set = Mnist(false, a => a.deepMap(v => Number(v) / 255).reshape(-1, 1, 28, 28), null, 1000)
 let train_loader = DataLoader(train_set, batch_size)
 let test_loader = DataLoader(test_set, batch_size)
 

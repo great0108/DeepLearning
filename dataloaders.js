@@ -24,6 +24,7 @@
     }
 
     DataLoader.prototype[Symbol.iterator] = function* () {
+        this.reset()
         for(let i = 0; i < this.max_iter; i++) {
             let batch_index = this.index.slice(i * this.batch_size, (i+1) * this.batch_size)
             if(i === this.max_iter-1) {
@@ -35,7 +36,30 @@
     }
 
 
+    function SeqDataLoader(dataset, batch_size) {
+        if(!(this instanceof SeqDataLoader)) {
+            return new SeqDataLoader(dataset, batch_size)
+        }
+        DataLoader.call(this, dataset, batch_size, false)
+    }
+
+    SeqDataLoader.prototype.__proto__ = DataLoader.prototype
+
+    SeqDataLoader.prototype[Symbol.iterator] = function* () {
+        this.reset()
+        for(let i = 0; i < this.max_iter; i++) {
+            let jump = Math.floor(this.data_size / this.batch_size)
+            let batch = Arr()
+            for(let j = 0; j < this.batch_size; j++) {
+                batch.push(this.dataset.get(j * jump + i))
+            }
+            yield [batch.map(v => v[0]), batch.map(v => v[1])]
+        }
+    }
+
+
     module.exports = {
-        DataLoader : DataLoader
+        DataLoader : DataLoader,
+        SeqDataLoader : SeqDataLoader
     }
 })()

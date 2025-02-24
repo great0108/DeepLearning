@@ -1,7 +1,7 @@
 (function() {
     "use strict"
     const Arr = require("./Arr")
-    const {Parameter, List, add} = require("./core")
+    const {Parameter, List} = require("./core")
     const F = require("./functions")
     const Callable = require("./Callable")
     const utils = require("./utils")
@@ -208,10 +208,63 @@
         return h_new
     }
 
+
+    function LSTM(hidden_size, in_size) {
+        if(!(this instanceof LSTM)) {
+            return new LSTM(hidden_size, in_size)
+        }
+        this.x2f = Linear(hidden_size, false, in_size)
+        this.x2i = Linear(hidden_size, false, in_size)
+        this.x2o = Linear(hidden_size, false, in_size)
+        this.x2u = Linear(hidden_size, false, in_size)
+        this.h2f = Linear(hidden_size, true, in_size)
+        this.h2i = Linear(hidden_size, true, in_size)
+        this.h2o = Linear(hidden_size, true, in_size)
+        this.h2u = Linear(hidden_size, true, in_size)
+
+        this.reset_state()
+        return this.make(this)
+    }
+
+    LSTM.prototype.__proto__ = Layer.prototype
+
+    LSTM.prototype.reset_state = function() {
+        this.h = null
+        this.c = null
+    }
+
+    LSTM.prototype.forward = function(x) {
+        let f, i, o, u
+        if(this.h == null) {
+            f = F.sigmoid(this.x2f(x))
+            i = F.sigmoid(this.x2i(x))
+            o = F.sigmoid(this.x2o(x))
+            u = F.tanh(this.x2u(x))
+        } else {
+            f = F.sigmoid(this.x2f(x).plus(this.h2f(this.h)))
+            i = F.sigmoid(this.x2i(x).plus(this.h2i(this.h)))
+            o = F.sigmoid(this.x2o(x).plus(this.h2o(this.h)))
+            u = F.tanh(this.x2u(x).plus(this.h2u(this.h)))
+        }
+
+        let c_new, h_new
+        if(this.c == null) {
+            c_new = i.mul(u)
+        } else {
+            c_new = f.mul(this.c).plus(i.mul(u))
+        }
+        h_new = o.mul(F.tanh(c_new))
+
+        this.c = c_new
+        this.h = h_new
+        return h_new
+    }
+
     module.exports = {
         Layer : Layer,
         Linear : Linear,
         Conv2d : Conv2d,
-        RNN : RNN
+        RNN : RNN,
+        LSTM : LSTM
     }
 })()

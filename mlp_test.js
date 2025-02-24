@@ -1,5 +1,5 @@
 const {Variable, no_grad} = require("./core")
-const {sigmoid, mean_squared_error, softmax_cross_entropy, accuracy} = require("./functions")
+const {sigmoid, mean_squared_error, softmax_cross_entropy, accuracy, relu} = require("./functions")
 const {Layer, Linear} = require("./layers")
 const {MLP} = require("./models")
 const {SGD, MomentumSGD, AdaGrad, AdaDelta, Adam} = require("./optimizers")
@@ -18,7 +18,7 @@ let test_set = new Spiral(false)
 let train_loader = new DataLoader(train_set, batch_size)
 let test_loader = new DataLoader(test_set, batch_size, false)
 
-let model = MLP([hidden_size, 3])
+let model = MLP([hidden_size, 3], relu)
 if(utils.exist_file("mlp.json")) {
     model.load_weights("mlp.json")
 }
@@ -44,7 +44,7 @@ for(let epoch = 0; epoch < max_epoch; epoch++) {
 
     let avg_loss = sum_loss / train_set.length
     let avg_acc = sum_acc / train_set.length
-    if((epoch+1) % 20 === 0) {
+    if((epoch+1) % 10 === 0) {
         console.log("epoch : " + (epoch+1) + "  loss : " + avg_loss + "  accuracy : " + avg_acc)
         sum_loss = 0
         sum_acc = 0
@@ -63,4 +63,5 @@ for(let epoch = 0; epoch < max_epoch; epoch++) {
         console.log("test loss : " + avg_loss + "  test accuracy : " + avg_acc)
     }
 }
+
 model.save_weights("mlp.json")
