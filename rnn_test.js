@@ -1,14 +1,13 @@
-const {Variable, no_grad, test_mode} = require("./core")
-const {sigmoid, mean_squared_error, softmax_cross_entropy, accuracy, dropout, relu, pooling, average_pooling, flatten} = require("./functions")
-const {Layer, Linear, Conv2d, RNN, LSTM} = require("./layers")
-const {MLP} = require("./models")
-const {SGD, MomentumSGD, AdaGrad, AdaDelta, Adam} = require("./optimizers")
+const {test_mode} = require("./core")
+const {mean_squared_error} = require("./functions")
+const {Layer, Linear, LSTM} = require("./layers")
+const {Adam} = require("./optimizers")
 const Arr = require("./Arr")
-const {Spiral, Mnist, SinCurve} = require("./datasets")
-const {DataLoader, SeqDataLoader} = require("./dataloaders")
+const {SinCurve} = require("./datasets")
+const {SeqDataLoader} = require("./dataloaders")
 
 let max_epoch = 100
-let batch_size = 30
+let batch_size = 50
 let hidden_size = 100
 let bptt_length = 30
 let lr = 0.001
@@ -69,7 +68,7 @@ for(let epoch = 0; epoch < max_epoch; epoch++) {
     if((epoch+1) % 10 === 0) {
         console.log("epoch : " + (epoch+1) + "  loss : " + avg_loss)
         sum_loss = 0
-        no_grad(() => {
+        test_mode(() => {
             for(let data of test_loader) {
                 let [x, t] = data
 
@@ -88,7 +87,7 @@ xs = Arr(xs.map(v => Math.sin(v)).slice(0, 100)).expand(1)
 
 model.reset_state()
 pred = []
-no_grad(() => {
+test_mode(() => {
     for(let x of xs) {
         let y = model(x.reshape(1, 1))
         pred.push(y.data[0])

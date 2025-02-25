@@ -32,7 +32,7 @@
     }
 
     function test_mode(callback) {
-        using_config("train", false, callback)
+        using_config("train", false, () => no_grad(callback))
     }
 
 

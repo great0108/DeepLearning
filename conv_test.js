@@ -1,10 +1,8 @@
-const {Variable, no_grad, test_mode} = require("./core")
-const {sigmoid, mean_squared_error, softmax_cross_entropy, accuracy, dropout, relu, pooling, average_pooling, flatten} = require("./functions")
+const {test_mode} = require("./core")
+const {softmax_cross_entropy, accuracy, relu, average_pooling, flatten} = require("./functions")
 const {Layer, Linear, Conv2d} = require("./layers")
-const {MLP} = require("./models")
-const {SGD, MomentumSGD, AdaGrad, AdaDelta, Adam} = require("./optimizers")
-const Arr = require("./Arr")
-const {Spiral, Mnist} = require("./datasets")
+const {Adam} = require("./optimizers")
+const {Mnist} = require("./datasets")
 const {DataLoader} = require("./dataloaders")
 
 function ConvModel() {
@@ -58,7 +56,7 @@ for(let epoch = 0; epoch < max_epoch; epoch++) {
         let avg_acc = sum_acc / train_set.length
         let test_loss = 0
         let test_acc = 0
-        no_grad(() => {
+        test_mode(() => {
             for(let data of test_loader) {
                 let [x, t] = data
                 let y = model(x)
