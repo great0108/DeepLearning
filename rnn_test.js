@@ -1,4 +1,4 @@
-const {test_mode} = require("./core")
+const {no_grad, test_mode} = require("./core")
 const {mean_squared_error} = require("./functions")
 const {Layer, Linear, LSTM} = require("./layers")
 const {Adam} = require("./optimizers")
@@ -7,7 +7,7 @@ const {SinCurve} = require("./datasets")
 const {SeqDataLoader} = require("./dataloaders")
 
 let max_epoch = 100
-let batch_size = 50
+let batch_size = 10
 let hidden_size = 100
 let bptt_length = 30
 let lr = 0.001
@@ -68,7 +68,7 @@ for(let epoch = 0; epoch < max_epoch; epoch++) {
     if((epoch+1) % 10 === 0) {
         console.log("epoch : " + (epoch+1) + "  loss : " + avg_loss)
         sum_loss = 0
-        test_mode(() => {
+        no_grad(() => {
             for(let data of test_loader) {
                 let [x, t] = data
 

@@ -4,6 +4,7 @@ const {Layer, Linear, BatchNorm, MLP} = require("./layers")
 const {Adam} = require("./optimizers")
 const {Spiral} = require("./datasets")
 const {DataLoader} = require("./dataloaders")
+const utils = require("./utils")
 
 function Model() {
     this.l1 = Linear(100)
