@@ -277,6 +277,27 @@
     }
 
 
+    function LeakyReLU(slope) {
+        let result = Operation.inherit(LeakyReLU)
+        result.slope = slope === undefined ? 0.1 : slope
+        return result
+    }
+
+    LeakyReLU.prototype.__proto__ = Operation.prototype
+
+    LeakyReLU.prototype.forward = function(x) {
+        let y = x.deepMap(v => v > 0 ? v : v * this.slope)
+        return y
+    }
+
+    LeakyReLU.prototype.backward = function(gy) {
+        let x = this.inputs[0]
+        let mask = x.deepMap(v => v > 0 ? 1 : this.slope)
+        let gx = gy.mul(mask)
+        return gx
+    }
+
+
     function Softmax(axis) {
         let result = Operation.inherit(Softmax)
         result.axis = axis === undefined ? 1 : axis
@@ -359,6 +380,86 @@
     }
 
 
+    function BatchNorm(mean, variance, decay, eps) {
+        let result = Operation.inherit(BatchNorm)
+        result.avg_mean = mean
+        result.avg_var = variance
+        result.decay = decay === undefined ? 0.9 : decay
+        result.eps = eps === undefined ? 1e-5 : eps
+        result.inv_std = null
+        return result
+    }
+
+    BatchNorm.prototype.__proto__ = Operation.prototype
+
+    BatchNorm.prototype.forward = function(x, gamma, beta) {
+        let dim = x.ndim
+        let N, C, H, W
+        if(dim != 2 && dim != 4) {
+            throw new Error("BatchNorm의 입력값이 이상합니다.")
+        }
+
+        if(dim == 4) {
+            [N, C, H, W] = x.shape
+            x = x.transpose(0, 2, 3, 1).reshape(-1, C)
+        }
+
+        let xc = null
+        if(Config.train) {
+            let mean = x.mean(0)
+            let variance = x.pow(2).mean(0).minus(mean.pow(2))
+            let inv_std = variance.plus(this.eps).deepMap(v => Math.sqrt(v)).rdiv(1)
+            xc = x.minus(mean).mul(inv_std)
+
+            let m = Math.floor(x.size / gamma.size)
+            let s = m > 2 ? m - 1 : 1
+            let adjust = m / s
+            
+            this.avg_mean = this.avg_mean.mul(this.decay).plus(mean.mul(1 - this.decay))
+            this.avg_var = this.avg_var.mul(this.decay).plus(variance.mul((1 - this.decay) * adjust))
+            this.inv_std = inv_std
+        } else {
+            this.inv_std = this.avg_var.plus(this.eps).deepMap(v => Math.sqrt(v)).rdiv(1)
+            xc = x.minus(this.avg_mean).mul(inv_std)
+        }
+
+        let y = gamma.mul(xc).plus(beta)
+        if(dim == 4) {
+            y = y.reshape(N, H, W, C).transpose(0, 3, 1, 2)
+        }
+        return y
+    }
+
+    BatchNorm.prototype.backward = function(gy) {
+        let dim = gy.ndim
+        let N, C, H, W
+        if(dim == 4) {
+            [N, C, H, W] = gy.shape
+            gy = gy.transpose(0, 2, 3, 1).reshape(-1, C)
+        }
+
+        let [x, gamma, beta] = this.inputs
+        let batch_size = gy.length
+
+        if(dim == 4) {
+            [N, C, H, W] = x.shape
+            x = x.transpose(0, 2, 3, 1).reshape(-1, C)
+        }
+        let mean = x.sum(0).div(batch_size)
+        let xc = x.minus(mean).mul(this.inv_std)
+
+        let gbeta = gy.sum(0)
+        let ggamma = gy.mul(xc).sum(0)
+        let gx = gy.minus(gbeta).minus(ggamma.mul(xc)).div(batch_size)
+        gx = gx.mul(gamma).mul(this.inv_std)
+
+        if(dim == 4) {
+            gx = gx.reshape(N, H, W, C).transpose(0, 3, 1, 2)
+        }
+        return gx, ggamma, gbeta
+    }
+
+
     function sin(x) {
         return Sin()(x)
     }
@@ -414,6 +515,10 @@
         return ReLU()(x)
     }
 
+    function leaky_relu(x, slope) {
+        return LeakyReLU(slope)(x)
+    }
+
     function softmax(x, axis) {
         return Softmax(axis)(x)
     }
@@ -428,6 +533,10 @@
 
     function flatten(x) {
         return x.reshape(x.shape[0], -1)
+    }
+
+    function batch_norm(x, gamma, beta, mean, variance, decay, eps) {
+        return BatchNorm(mean, variance, decay, eps)(x, gamma, beta)
     }
 
     
@@ -577,10 +686,12 @@
         linear : linear,
         sigmoid : sigmoid,
         relu : relu,
+        leaky_relu : leaky_relu,
         softmax : softmax,
         mean_squared_error : mean_squared_error,
         softmax_cross_entropy : softmax_cross_entropy,
         flatten : flatten,
+        batch_norm : batch_norm,
         accuracy : accuracy,
         dropout : dropout,
         im2col : im2col,

@@ -260,11 +260,49 @@
         return h_new
     }
 
+
+    function BatchNorm() {
+        if(!(this instanceof BatchNorm)) {
+            return new BatchNorm()
+        }
+        this.avg_mean = new Parameter(null, "avg_mean")
+        this.avg_var = new Parameter(null, "avg_var")
+        this.gamma = new Parameter(null, "gamma")
+        this.beta = new Parameter(null, "beta")
+        return this.make(this)
+    }
+
+    BatchNorm.prototype.__proto__ = Layer.prototype
+
+    BatchNorm.prototype._init_params = function(x) {
+        let D = x.shape[1]
+        if(this.avg_mean.data == null) {
+            this.avg_mean.data = Arr.zeros(D)
+        }
+        if(this.avg_var.data == null) {
+            this.avg_var.data = Arr.fill(D, 1)
+        }
+        if(this.gamma.data == null) {
+            this.gamma.data = Arr.fill(D, 1)
+        }
+        if(this.beta.data == null) {
+            this.beta.data = Arr.zeros(D)
+        }
+    }
+
+    BatchNorm.prototype.forward = function(x) {
+        if(this.avg_mean.data == null) {
+            this._init_params(x)
+        }
+        return F.batch_norm(x, this.gamma, this.beta, this.avg_mean.data, this.avg_var.data)
+    }
+
     module.exports = {
         Layer : Layer,
         Linear : Linear,
         Conv2d : Conv2d,
         RNN : RNN,
-        LSTM : LSTM
+        LSTM : LSTM,
+        BatchNorm : BatchNorm
     }
 })()
