@@ -7,5 +7,9 @@ Require(Import) module to start.
 const { Arr, core, functions, layers, optimizers, datasets, dataloaders, utils } = require(PATH);
 ```
 
+**Arr** : Module for handling multidimensional arrays. You can find the description in Arr docs.txt
+**core**
+**functions**
+
 ### Reference
 https://github.com/WegraLee/deep-learning-from-scratch-3/tree/master
