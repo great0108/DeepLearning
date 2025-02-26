@@ -6,3 +6,6 @@ Require(Import) module to start.
 ```javascript
 const { Arr, core, functions, layers, optimizers, datasets, dataloaders, utils } = require(PATH);
 ```
+
+### Reference
+https://github.com/WegraLee/deep-learning-from-scratch-3/tree/master
