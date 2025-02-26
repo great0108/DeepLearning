@@ -1,7 +1,6 @@
 const {Variable, no_grad, test_mode} = require("../core")
-const {sigmoid, mean_squared_error, softmax_cross_entropy, accuracy, dropout, relu, polling, flatten, im2col, conv2d_simple} = require("../functions")
+const {sigmoid, mean_squared_error, softmax_cross_entropy, accuracy, dropout, relu, pooling, flatten, im2col, conv2d_simple} = require("../functions")
 const {Layer, Linear, Conv2d} = require("../layers")
-const {MLP} = require("./models")
 const {SGD, MomentumSGD, AdaGrad, AdaDelta, Adam} = require("../optimizers")
 const Arr = require("../Arr")
 const {Spiral, Mnist} = require("../datasets")
