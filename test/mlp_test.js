@@ -1,10 +1,10 @@
-const {test_mode} = require("./core")
-const {softmax_cross_entropy, accuracy, relu} = require("./functions")
-const {Layer, Linear, BatchNorm, MLP} = require("./layers")
-const {Adam} = require("./optimizers")
-const {Spiral} = require("./datasets")
-const {DataLoader} = require("./dataloaders")
-const utils = require("./utils")
+const {test_mode} = require("../core")
+const {softmax_cross_entropy, accuracy, relu} = require("../functions")
+const {Layer, Linear, BatchNorm, MLP} = require("../layers")
+const {Adam} = require("../optimizers")
+const {Spiral} = require("../datasets")
+const {DataLoader} = require("../dataloaders")
+const utils = require("../utils")
 
 function Model() {
     this.l1 = Linear(100)
@@ -30,7 +30,7 @@ let train_loader = new DataLoader(train_set, batch_size)
 let test_loader = new DataLoader(test_set, batch_size, false)
 
 let model = new Model()
-// let model = MLP([100, 10], relu) => same model
+// let model = MLP([100, 10], relu) // same model
 
 if(utils.exist_file("mlp.json")) {
     model.load_weights("mlp.json")

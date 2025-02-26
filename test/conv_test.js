@@ -1,9 +1,9 @@
-const {test_mode} = require("./core")
-const {softmax_cross_entropy, accuracy, relu, average_pooling, flatten} = require("./functions")
-const {Layer, Linear, Conv2d} = require("./layers")
-const {Adam} = require("./optimizers")
-const {Mnist} = require("./datasets")
-const {DataLoader} = require("./dataloaders")
+const {test_mode} = require("../core")
+const {softmax_cross_entropy, accuracy, relu, average_pooling, flatten} = require("../functions")
+const {Layer, Linear, Conv2d} = require("../layers")
+const {Adam} = require("../optimizers")
+const {Mnist} = require("../datasets")
+const {DataLoader} = require("../dataloaders")
 
 function ConvModel() {
     this.conv1 = Conv2d(16, 3, 1, 1)

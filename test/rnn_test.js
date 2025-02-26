@@ -1,10 +1,10 @@
-const {no_grad, test_mode} = require("./core")
-const {mean_squared_error} = require("./functions")
-const {Layer, Linear, LSTM} = require("./layers")
-const {Adam} = require("./optimizers")
-const Arr = require("./Arr")
-const {SinCurve} = require("./datasets")
-const {SeqDataLoader} = require("./dataloaders")
+const {no_grad, test_mode} = require("../core")
+const {mean_squared_error} = require("../functions")
+const {Layer, Linear, LSTM} = require("../layers")
+const {Adam} = require("../optimizers")
+const Arr = require("../Arr")
+const {SinCurve} = require("../datasets")
+const {SeqDataLoader} = require("../dataloaders")
 
 let max_epoch = 100
 let batch_size = 10
