@@ -1,5 +1,5 @@
 # DeepLearning.js
-Implementation of deep learning framework in pure Javascript without any other libraries and frameworks.
+Implementation of deep learning framework in pure Javascript without any other libraries and frameworks except fs module for file IO.
 
 ### Get Started
 Require(Import) module to start.
