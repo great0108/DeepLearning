@@ -23,5 +23,9 @@ const { Arr, core, functions, layers, optimizers, datasets, dataloaders, utils }
 
 **utils** : Implement mics functions and functions for file IO
 
+
+### Example
+You can find some simple examples in test folder
+
 ### Reference
 https://github.com/WegraLee/deep-learning-from-scratch-3/tree/master
