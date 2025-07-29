@@ -2,9 +2,9 @@
 Implementation of deep learning framework in pure Javascript without any other libraries and frameworks.
 
 ### Get Started
-Require(Import) module to start.
+download and import module to start.
 ```javascript
-const { Arr, core, functions, layers, optimizers, datasets, dataloaders, utils } = require(PATH);
+const { Arr, core, functions, layers, optimizers, datasets, dataloaders, utils } = require("DeepLearning");
 ```
 
 **Arr** : Module for handling multidimensional arrays. You can find the description in Arr docs.txt
