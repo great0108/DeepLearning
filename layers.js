@@ -157,7 +157,7 @@
         for(let i = 0; i < this.layer_num-1; i++) {
             x = this.activation(this["l"+i](x))
         }
-        return this["l"+this.layer_num-1](x)
+        return this["l"+(this.layer_num-1)](x)
     }
 
 
